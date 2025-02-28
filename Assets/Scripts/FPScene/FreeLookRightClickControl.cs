@@ -28,6 +28,7 @@ public class FreeLookRightClickControl : MonoBehaviour
     private Vector2 input = Vector2.zero;
     private Vector2 currentVelocity = Vector2.zero;
 
+
     void Update()
     {
 

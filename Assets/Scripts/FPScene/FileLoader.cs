@@ -130,10 +130,14 @@ public class FileLoader : MonoBehaviour
         if (fullFileName != "" && File.Exists(filePath))
         {
             File.Delete(filePath);
+            if (File.Exists(filePath + ".meta"))
+            {
+                File.Delete(filePath + ".meta");
+            }
             GameObject buttonControllerObject = GameObject.Find("ButtonController");
             FileManager files = buttonControllerObject.GetComponent<FileManager>();
-            Destroy(fileButton);
             fileName.text = "";
+            files.UnloadSelectedFolderFiles();
             files.LoadSelectedFolderFiles(folderPath);
             rowCount = 0;
             Debug.Log("File deleted successfully: " + filePath);

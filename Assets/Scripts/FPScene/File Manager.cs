@@ -21,9 +21,6 @@ public class FileManager : MonoBehaviour
     [SerializeField]
     private Transform RecordingItems;
     [SerializeField]
-
-    private GameObject SwitchCamera;
-    [SerializeField]
     private Canvas PageControl;
 
     private Thread thread;
@@ -33,7 +30,12 @@ public class FileManager : MonoBehaviour
     {
         await FolderSelect();
 
+        UnloadSelectedFolderFiles();
         LoadSelectedFolderFiles(mainPath);
+        GameObject buttonControllerObject = GameObject.Find("ButtonController");//buttoncontroller 
+        SetScroll setScroll = buttonControllerObject.GetComponent<SetScroll>();
+
+        setScroll.SetScrollArea();
     }
 
 
@@ -49,6 +51,7 @@ public class FileManager : MonoBehaviour
             }
 
         });
+
     }
 
     public void LoadSelectedFolderFiles(string mainPath)
@@ -77,6 +80,9 @@ public class FileManager : MonoBehaviour
             GameObject canvas = GameObject.Find("Canvas");//canvas
             MenuController menuController = canvas.GetComponent<MenuController>();
 
+            GameObject deleteButton = GameObject.Find("DeleteRecordingButton");
+            InteractableButton interactableButton = deleteButton.GetComponent<InteractableButton>();
+
             //pops itself and any additional non-sepecial pages, pops the primary page (start), and resets the model for a new file. After, sends file name and information to file loader.
             if (buttonComponent != null)
             {
@@ -87,7 +93,19 @@ public class FileManager : MonoBehaviour
                 buttonComponent.onClick.AddListener(disableFocus.TurnOffSectionToggle);
                 buttonComponent.onClick.AddListener(() => fileLoader.LoadFile(mainPath, file.Name, file.FullName, fileButton));
                 buttonComponent.onClick.AddListener(fileLoader.PauseFile);
+                buttonComponent.onClick.AddListener(interactableButton.InteractButtonOn);
             }
+        }
+    }
+
+    public void UnloadSelectedFolderFiles()
+    {
+
+        GameObject recordingButtons = GameObject.Find("RecordingItems");
+        while (recordingButtons.transform.childCount > 0)
+        {
+            Debug.Log("1");
+            DestroyImmediate(recordingButtons.transform.GetChild(0).gameObject);
         }
     }
 
