@@ -18,18 +18,16 @@ public class ScrollWheelController : MonoBehaviour
 
     private void HandleScrollInput()
     {
-        // Read the scroll input (vector2)
         Vector2 scrollValue = scrollAction.action.ReadValue<Vector2>();
 
-        // Check if there is vertical scroll input
+        //vertical scroll
         if (scrollValue.y != 0)
         {
-            Debug.Log("scroll");
 
-            // Update the ScrollRect's normalized position based on scroll value
+            //Update normalized position
             scrollRect.verticalNormalizedPosition += scrollValue.y * scrollSpeed * Time.deltaTime;
 
-            // Clamp to make sure the value stays between 0 and 1
+            //clapm
             scrollRect.verticalNormalizedPosition = Mathf.Clamp01(scrollRect.verticalNormalizedPosition);
         }
     }

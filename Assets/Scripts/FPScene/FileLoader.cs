@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static UnityEngine.ParticleSystem;
 
 
 
@@ -14,6 +15,7 @@ public class FileLoader : MonoBehaviour
     [SerializeField] private TMP_Text ProgressAt;
     [SerializeField] private TMP_Text fileName;
     [SerializeField] private Toggle playToggle;
+    [SerializeField] GameObject mainModel;
 
     private GameObject fileButton;
     private float updateIntervalSpeed = 100f;
@@ -24,7 +26,7 @@ public class FileLoader : MonoBehaviour
     private int rowCount;
     void Update()
     {
-
+        MovementController movementController = mainModel.GetComponent<MovementController>();
         if (playToggle.isOn)
         {
             progress += Time.deltaTime;
@@ -36,11 +38,18 @@ public class FileLoader : MonoBehaviour
         }
         if (rowCount != 0)
         {
+            movementController.loadJoints();
+            if (progressBar.value < progressBar.maxValue)
+            {
+                movementController.LoadCSVData(fullFileName, (int)progressBar.value);
+            }
+
             progressBar.gameObject.SetActive(true);
-            ProgressAt.text = progressBar.value.ToString() + "/" + rowCount;
+            ProgressAt.text = progressBar.value.ToString() + "/" + (rowCount);
         }
         else
         {
+            movementController.unloadJoints();
             progressBar.gameObject.SetActive(false);
             ProgressAt.text = "";
         }
@@ -74,7 +83,7 @@ public class FileLoader : MonoBehaviour
     {
         if (progressBar.value == progressBar.maxValue)
         {
-            progressBar.value = 0;
+            progressBar.value = 1;
         }
         playToggle.isOn = true;
     }
