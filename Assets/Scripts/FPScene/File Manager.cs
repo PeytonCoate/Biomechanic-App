@@ -62,7 +62,7 @@ public class FileManager : MonoBehaviour
         {
             GameObject fileButton = Instantiate(recordingButtonTemplate, RecordingItems, false) as GameObject; //instantiates a button for each marked file.
             TMP_Text[] textComponents = fileButton.GetComponentsInChildren<TMP_Text>();
-            string FileDate = File.GetCreationTime(file.Directory.ToString()).ToString();
+            string FileDate = File.GetCreationTime(file.ToString()).ToString();
             if (textComponents.Length >= 3)
             {
                 textComponents[0].text = file.Name;

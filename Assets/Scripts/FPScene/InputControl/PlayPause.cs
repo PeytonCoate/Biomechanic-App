@@ -1,13 +1,34 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayPause : MonoBehaviour
 {
+    [SerializeField] private Toggle playToggle;
+    [SerializeField] private Image playImage;
+    [SerializeField] private Image pauseImage;
     private void OnSpace()
     {
         GameObject buttonControllerObject = GameObject.Find("ButtonController");//buttoncontroller 
         FileLoader fileLoader = buttonControllerObject.GetComponent<FileLoader>();
         fileLoader.togglePlayButton();
+    }
+
+    public void ToggleSpriteChange()
+    {
+        if (playToggle.isOn)
+        {
+            Color offColor = playImage.color;
+            offColor.a = Mathf.Clamp01(0);
+            playImage.color = offColor;
+        }
+        else
+        {
+            Color onColor = playImage.color;
+            onColor.a = Mathf.Clamp01(1);
+            playImage.color = onColor;
+        }
     }
 }
