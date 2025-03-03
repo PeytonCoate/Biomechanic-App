@@ -34,7 +34,7 @@ public class MenuController : MonoBehaviour
         }
     }
 
-    private void OnCancel()
+    private void OnBack()
     {
         if (RootCanvas.enabled && RootCanvas.gameObject.activeInHierarchy)
         {

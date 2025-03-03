@@ -6,12 +6,14 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using static UnityEngine.ParticleSystem;
+using static UnityEngine.Rendering.DebugUI;
 
 
 
 public class FileLoader : MonoBehaviour
 {
     [SerializeField] private Slider progressBar;
+    [SerializeField] private TMP_InputField inputField;
     [SerializeField] private TMP_Text ProgressAt;
     [SerializeField] private TMP_Text fileName;
     [SerializeField] private Toggle playToggle;
@@ -43,13 +45,14 @@ public class FileLoader : MonoBehaviour
             {
                 movementController.LoadCSVData(fullFileName, (int)progressBar.value);
             }
-
+            inputField.gameObject.SetActive(true);
             progressBar.gameObject.SetActive(true);
             ProgressAt.text = progressBar.value.ToString() + "/" + (rowCount);
         }
         else
         {
             movementController.unloadJoints();
+            inputField.gameObject.SetActive(false);
             progressBar.gameObject.SetActive(false);
             ProgressAt.text = "";
         }
