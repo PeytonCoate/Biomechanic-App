@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using Button = UnityEngine.UI.Button;
 using System.Threading.Tasks;
 using TMPro;
+using System.Linq;
 using UnityEngine.InputSystem.Controls;
 using UnityEditor;
 
@@ -17,14 +18,14 @@ public class FileManager : MonoBehaviour
 {
 
     [SerializeField]
-    private GameObject recordingButtonTemplate;
+    private GameObject RecordingButtonLocalTemplate;
     [SerializeField]
     private Transform RecordingItems;
     [SerializeField]
     private Canvas PageControl;
 
-    private Thread thread;
     private string mainPath = "E:\\Unity\\Projects\\Biomechanic-App\\Biomechanic-App\\Assets"; //Change this to whatever directory your recording CSV files are in
+    private int sortType = 0;
 
     public async void AsyncSelectFolder()
     {
@@ -34,7 +35,6 @@ public class FileManager : MonoBehaviour
         LoadSelectedFolderFiles(mainPath);
         GameObject buttonControllerObject = GameObject.Find("ButtonController");//buttoncontroller 
         SetScroll setScroll = buttonControllerObject.GetComponent<SetScroll>();
-
         setScroll.SetScrollArea();
     }
 
@@ -54,13 +54,41 @@ public class FileManager : MonoBehaviour
 
     }
 
+    public void switchToDesktopRecordings()
+    {
+        LoadSelectedFolderFiles(mainPath);
+        GameObject buttonControllerObject = GameObject.Find("ButtonController");//buttoncontroller 
+        SetScroll setScroll = buttonControllerObject.GetComponent<SetScroll>();
+        setScroll.SetScrollArea();
+    }
+
+    public void switchToCloudRecordings()
+    {
+
+    }
+
     public void LoadSelectedFolderFiles(string mainPath)
     {
         DirectoryInfo dir = new DirectoryInfo(mainPath);
         FileInfo[] files = dir.GetFiles("*.csv");
+
+        //for changed sort type in sorting dropdown;
+        if (sortType == 1)
+        {
+            files = files.OrderBy(f => f.CreationTime).ToArray();
+        }
+        else if (sortType == 2)
+        {
+            files = files.OrderBy(f => File.ReadLines(f.FullName).Count()).ToArray();
+        }
+        else
+        {
+            files = files.OrderBy(f => f.Name).ToArray();
+        }
+
         foreach (FileInfo file in files) //reads in files from folder selected.
         {
-            GameObject fileButton = Instantiate(recordingButtonTemplate, RecordingItems, false) as GameObject; //instantiates a button for each marked file.
+            GameObject fileButton = Instantiate(RecordingButtonLocalTemplate, RecordingItems, false) as GameObject; //instantiates a button for each marked file.
             TMP_Text[] textComponents = fileButton.GetComponentsInChildren<TMP_Text>();
             string FileDate = File.GetCreationTime(file.ToString()).ToString();
             if (textComponents.Length >= 3)
@@ -104,10 +132,15 @@ public class FileManager : MonoBehaviour
         GameObject recordingButtons = GameObject.Find("RecordingItems");
         while (recordingButtons.transform.childCount > 0)
         {
-            Debug.Log("1");
             DestroyImmediate(recordingButtons.transform.GetChild(0).gameObject);
         }
     }
 
+    public void ChangeSortType(int sort)
+    {
+        sortType = sort;
+        UnloadSelectedFolderFiles();
+        LoadSelectedFolderFiles(mainPath);
+    }
 
 }
