@@ -22,7 +22,6 @@ public class FileLoader : MonoBehaviour
     private GameObject fileButton;
     private float updateIntervalSpeed = 100f;
     private float progress = 0f;
-    private float updateInterval = 1f/100f;
     private string fullFileName = "";
     private string folderPath = "";
     private int rowCount;
@@ -32,10 +31,10 @@ public class FileLoader : MonoBehaviour
         if (playToggle.isOn)
         {
             progress += Time.deltaTime;
-            while (progress >= updateInterval)
+            while (progress >= 1/updateIntervalSpeed)
             {
                 progressBar.value++;
-                progress -= updateInterval;
+                progress -= 1/updateIntervalSpeed;
             }
         }
         if (rowCount != 0)
@@ -108,23 +107,25 @@ public class FileLoader : MonoBehaviour
         }
     }
 
-    public void LowerPlayBackSpeed()
+    public float GetPlayBackSpeed()
     {
-        if (updateIntervalSpeed > 10f)
+        return updateIntervalSpeed;
+    }
+    public void SetPlayBackSpeed(float interval)
+    {
+        if (interval < 25f)
         {
-            updateIntervalSpeed -= 10f;
+            updateIntervalSpeed = 25f;
+            return;
         }
-        updateInterval = 1 / updateIntervalSpeed;
+        if (interval > 200f)
+        {
+            updateIntervalSpeed = 200f;
+            return;
+        }
+        updateIntervalSpeed = interval;
     }
 
-    public void RaisePlayBackSpeed()
-    {
-        if (updateIntervalSpeed <= 200f)
-        {
-            updateIntervalSpeed += 10f;
-        }
-        updateInterval = 1 / updateIntervalSpeed;
-    }
 
     public void GoBack()
     {

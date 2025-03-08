@@ -11,6 +11,12 @@ public class ScrollWheelController : MonoBehaviour
 
     public float scrollSpeed = 0.1f;
 
+    void Start()
+    {
+        if (scrollRect != null)
+            scrollRect.verticalNormalizedPosition = 1f; // 1 = Top, 0 = Bottom
+    }
+
     void Update()
     {
         HandleScrollInput();

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.Networking;
+using Newtonsoft.Json;
+using TreeEditor;
 
 public class NetworkManager : MonoBehaviour
 {
@@ -13,8 +15,15 @@ public class NetworkManager : MonoBehaviour
         string url = "http://18.223.209.117:8080/patients";
         Get(url, (string error) => {
             Debug.Log("Error: " + error);
-        }, (string text) => {
-            Debug.Log("Received: " + text);
+        }, (string text) =>
+        {
+            List<Patient> patients = JsonConvert.DeserializeObject<List<Patient>>(text);
+            //Debug.Log("Received: " + text);
+
+            foreach (var patient in patients)
+            {
+                Debug.Log(patient.fld_p_name);
+            }
         });
     }
 
@@ -38,4 +47,15 @@ public class NetworkManager : MonoBehaviour
             }
         }
     }
+}
+
+[System.Serializable]
+public class Patient
+{
+    public string fld_p_id_pk;
+    public string fld_p_name;
+    public int fld_p_number;
+    public int fld_p_age;
+    public string fld_p_dob;
+    public string fld_t_id_fk;
 }

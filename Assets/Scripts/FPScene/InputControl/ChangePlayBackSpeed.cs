@@ -17,7 +17,8 @@ public class ChangePlayBackSpeed : MonoBehaviour
         {
             GameObject buttonControllerObject = GameObject.Find("ButtonController");//buttoncontroller
             FileLoader fileLoader = buttonControllerObject.GetComponent<FileLoader>();
-            fileLoader.RaisePlayBackSpeed();
+            float oldspeed = fileLoader.GetPlayBackSpeed();
+            fileLoader.SetPlayBackSpeed(oldspeed + 25f);
         }
     }
 
@@ -27,7 +28,8 @@ public class ChangePlayBackSpeed : MonoBehaviour
         {
             GameObject buttonControllerObject = GameObject.Find("ButtonController");//buttoncontroller
             FileLoader fileLoader = buttonControllerObject.GetComponent<FileLoader>();
-            fileLoader.LowerPlayBackSpeed();
+            float oldspeed = fileLoader.GetPlayBackSpeed();
+            fileLoader.SetPlayBackSpeed(oldspeed - 25f);
         }
     }
     private void OnLeft()
