@@ -46,12 +46,22 @@ public class FileManager : MonoBehaviour
             var path = StandaloneFileBrowser.OpenFolderPanel("Open File", mainPath, false);
             if (path != null && path.Length > 0)
             {
-                Debug.Log(path[0]);
                 mainPath = path[0];
             }
 
         });
 
+    }
+
+    public void SwitchDirectory(string directory)
+    {
+        mainPath = directory;
+
+        if(GameObject.Find("DesktopStorageToggle").GetComponent<Toggle>().isOn)
+        {
+            UnloadSelectedFolderFiles();
+            LoadSelectedFolderFiles(mainPath);
+        }
     }
 
     public void switchToDesktopRecordings()

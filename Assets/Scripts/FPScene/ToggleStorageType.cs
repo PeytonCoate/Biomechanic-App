@@ -34,10 +34,9 @@ public class ToggleStorageType : MonoBehaviour
 
     private void DesktopRecordings()
     {
-        selectFolderButton.gameObject.SetActive(true);
-        GameObject buttonControllerObject = GameObject.Find("ButtonController");
-        FileManager files = buttonControllerObject.GetComponent<FileManager>();
+        FileManager files = GameObject.Find("ButtonController").GetComponent<FileManager>();
         files.UnloadSelectedFolderFiles();
         files.switchToDesktopRecordings();
+        selectFolderButton.gameObject.SetActive(true);
     }
 }

@@ -456,9 +456,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'LocationID
-
-'
+  m_text: LocationID
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: c109f8c74829b8249ac06073e5cc4330, type: 2}
   m_sharedMaterial: {fileID: 5446891425653615233, guid: c109f8c74829b8249ac06073e5cc4330, type: 2}

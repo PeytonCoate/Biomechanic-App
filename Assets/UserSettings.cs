@@ -1,13 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using Unity.Cinemachine;
 using UnityEngine;
+using SFB;
+using System.Threading.Tasks;
 using UnityEngine.UI;
 
 public class UserSettings : MonoBehaviour
 {
     private float sensitivityValue;
     private float playBackSpeed;
+    private int skipIntervalIndex;
+    private int sortModeIndex;
+    private string defaultPath;
     // Start is called before the first frame update
     void Start()
     {
@@ -20,6 +26,26 @@ public class UserSettings : MonoBehaviour
         GameObject playBackSpeedSliderObject = GameObject.Find("PlayBackSpeedSlider");
         Slider playBackSpeedSlider = playBackSpeedSliderObject.GetComponent<Slider>();
         playBackSpeedSlider.value = playBackSpeed;
+
+        skipIntervalIndex = PlayerPrefs.GetInt("SkipIntervalIndex");
+        GameObject.Find("SkipIntervalDropdown").GetComponent<TMP_Dropdown>().value = skipIntervalIndex;
+
+        sortModeIndex = PlayerPrefs.GetInt("SortModeIndex");
+        GameObject.Find("DefaultSortModeDropDown").GetComponent<TMP_Dropdown>().value = sortModeIndex;
+
+        
+        defaultPath = PlayerPrefs.GetString("DefaultPath");
+        if (defaultPath != "")
+        {
+            GameObject.Find("DefaultDirectoryName").GetComponent<TMP_Text>().text = defaultPath;
+            GameObject.Find("ButtonController").GetComponent<FileManager>().SwitchDirectory(defaultPath);
+        }
+        else
+        {
+            GameObject.Find("DefaultDirectoryName").GetComponent<TMP_Text>().text = "D:\\IR\\EC\\TO\\RY";
+        }
+        
+
     }
 
     
@@ -56,5 +82,41 @@ public class UserSettings : MonoBehaviour
         fileLoader.SetPlayBackSpeed(playBackSpeed * 100);
     }
 
+    public void SetSkipInterval(TMP_Dropdown dropdown)
+    {
+        skipIntervalIndex = dropdown.value;
+        PlayerPrefs.SetInt("SkipIntervalIndex", skipIntervalIndex);
 
+        float skipIntervalValue = float.Parse(dropdown.options[skipIntervalIndex].text);
+        GameObject.Find("ButtonController").GetComponent<FileLoader>().SetSkipIntervalSpeed(skipIntervalValue);
+    }
+
+    public void SetDefaultSortMode(TMP_Dropdown dropdown)
+    {
+        sortModeIndex = dropdown.value;
+        PlayerPrefs.SetInt("SortModeIndex", sortModeIndex);
+        GameObject.Find("SortByDropdown").GetComponent<TMP_Dropdown>().value = sortModeIndex;
+    }
+
+    public async void SetDefaultDirectory()
+    {
+        await DefaultFolderSelect();
+        PlayerPrefs.SetString("DefaultPath", defaultPath);
+        GameObject.Find("DefaultDirectoryName").GetComponent<TMP_Text>().text = defaultPath;
+        GameObject.Find("ButtonController").GetComponent<FileManager>().SwitchDirectory(defaultPath);
+    }
+
+    private async Task DefaultFolderSelect() //async in order to keep main program running
+    {
+        await Task.Run(() =>
+        {
+            var path = StandaloneFileBrowser.OpenFolderPanel("Open File", defaultPath, false);
+            if (path != null && path.Length > 0)
+            {
+                defaultPath = path[0];
+                
+            }
+        });
+
+    }
 }

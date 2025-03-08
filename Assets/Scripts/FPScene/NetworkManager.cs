@@ -22,7 +22,7 @@ public class NetworkManager : MonoBehaviour
 
             foreach (var patient in patients)
             {
-                Debug.Log(patient.fld_p_name);
+                //Debug.Log(patient.fld_p_name);
             }
         });
     }

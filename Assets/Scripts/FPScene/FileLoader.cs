@@ -20,6 +20,7 @@ public class FileLoader : MonoBehaviour
     [SerializeField] GameObject mainModel;
 
     private GameObject fileButton;
+    private float skipIntervalValue;
     private float updateIntervalSpeed = 100f;
     private float progress = 0f;
     private string fullFileName = "";
@@ -127,14 +128,19 @@ public class FileLoader : MonoBehaviour
     }
 
 
+    public void SetSkipIntervalSpeed(float skipInterval)
+    {
+        skipIntervalValue = skipInterval;
+    }
+
     public void GoBack()
     {
-        progressBar.value -= 25f;
+        progressBar.value -= skipIntervalValue;
     }
 
     public void GoForward()
     {
-        progressBar.value += 25f;
+        progressBar.value += skipIntervalValue;
     }
 
     public void DeleteFile()
