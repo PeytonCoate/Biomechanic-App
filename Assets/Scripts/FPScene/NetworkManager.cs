@@ -17,6 +17,9 @@ public class NetworkManager : MonoBehaviour
     [SerializeField] private GameObject userProfileButtonTemplate;
     [SerializeField] private Transform profiles;
     private readonly string serverUrl = "http://18.223.209.117:8080";
+
+    private TokenResponse tokenResponse;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -31,15 +34,57 @@ public class NetworkManager : MonoBehaviour
         {
             Debug.Log("Error: " + error);
             GameObject.Find("ErrorText").GetComponent<TMP_Text>().text = "Error: " + error;
+            ResetInputText();
         }, (string text) =>
         {
-            JsonUtility.FromJson<PostResult>(text);
-            Debug.Log(text);
+            //JsonUtility.FromJson<PostResult>(text);
+            //Debug.Log(text);
+            tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(text);
+
+            string accessToken = tokenResponse.accessToken;
+            string refreshToken = tokenResponse.refreshToken;
+            Debug.Log(accessToken);
+            Debug.Log(refreshToken);
+
             LoadUserProfiles();
 
+            ResetInputText();
             GameObject.Find("ErrorText").GetComponent<TMP_Text>().text = "";
+            GameObject.Find("LogInButton").SetActive(false);
+            GameObject.Find("ForkPanel").transform.Find("LogOutButton").gameObject.SetActive(true);
             GameObject.Find("Canvas").GetComponent<MenuController>().PopPage();
         }, dataToPost));
+    }
+
+    public void TryLogout()
+    {
+        if (tokenResponse == null)
+        {
+            return;
+        }
+
+        RefreshData deleteData = new RefreshData();
+        deleteData.refreshToken = tokenResponse.accessToken;
+
+        StartCoroutine(DeleteLogoutCoroutine((string error) =>
+        {
+            Debug.Log("Error: " + error);
+        }, (string text) =>
+        {
+            
+            JsonUtility.FromJson<PostResult>(text);
+            Debug.Log(text);
+            
+            ResetInputText();
+            GameObject.Find("LogOutButton").SetActive(false);
+            GameObject.Find("ForkPanel").transform.Find("LogInButton").gameObject.SetActive(true);
+        }, deleteData));
+    }
+
+    private void ResetInputText()
+    {
+        GameObject.Find("UsernameInput").GetComponent<TMP_InputField>().text = string.Empty;
+        GameObject.Find("PasswordInput").GetComponent<TMP_InputField>().text = string.Empty;
     }
 
     private void LoadUserProfiles()
@@ -48,12 +93,13 @@ public class NetworkManager : MonoBehaviour
             Debug.Log("Error: " + error);
         }, (string text) =>
         {
+
             List<Patient> patients = JsonConvert.DeserializeObject<List<Patient>>(text);
             //Debug.Log("Received: " + text);
 
             foreach (var patient in patients)
             {
-                Debug.Log(patient.fld_p_name);
+                //Debug.Log(patient.fld_p_name);
                 GameObject profileButton = Instantiate(userProfileButtonTemplate, profiles, false) as GameObject;
                 TMP_Text[] textComponents = profileButton.GetComponentsInChildren<TMP_Text>();
                 textComponents[0].text = patient.fld_p_name;
@@ -97,6 +143,22 @@ public class NetworkManager : MonoBehaviour
             onSuccess(postRequest.downloadHandler.text);
         }
         
+    }
+
+    private IEnumerator DeleteLogoutCoroutine(Action<string> onError, Action<string> onSuccess, RefreshData dataToPost)
+    {
+        var postRequest = CreateRequest(serverUrl + "/users/logout", RequestType.DELETE, dataToPost);
+        
+        yield return postRequest.SendWebRequest();
+        if (postRequest.result == UnityWebRequest.Result.ConnectionError || postRequest.result == UnityWebRequest.Result.ProtocolError)
+        {
+            onError(postRequest.error);
+        }
+        else
+        {
+            //var deserializedPostData = JsonUtility.FromJson<PostResult>(postRequest.downloadHandler.text);
+            onSuccess(postRequest.downloadHandler.text);
+        }
     }
 
 
@@ -143,6 +205,16 @@ public class PostData
     public string pass;
 }
 
+public class TokenResponse
+{
+    public string accessToken;
+    public string refreshToken;
+}
+
+public class RefreshData
+{
+    public string refreshToken;
+}
 public class PostResult
 {
     public string success { get; set; }
