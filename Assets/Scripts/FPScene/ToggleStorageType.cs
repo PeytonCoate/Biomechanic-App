@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Button = UnityEngine.UI.Button;
@@ -10,6 +11,7 @@ public class ToggleStorageType : MonoBehaviour
     [SerializeField] private Toggle cloudToggle;
     [SerializeField] private Toggle DesktopToggle;
     [SerializeField] private Button selectFolderButton;
+    [SerializeField] private TMP_Dropdown selectUserDropdown;
 
 
     public void ToggleStorage()
@@ -27,8 +29,8 @@ public class ToggleStorageType : MonoBehaviour
     private void CloudRecordings()
     {
         selectFolderButton.gameObject.SetActive(false);
-        GameObject buttonControllerObject = GameObject.Find("ButtonController");
-        FileManager files = buttonControllerObject.GetComponent<FileManager>();
+        selectUserDropdown.gameObject.SetActive(true);
+        FileManager files = GameObject.Find("ButtonController").GetComponent<FileManager>();
         files.UnloadSelectedFolderFiles();
     }
 
@@ -38,5 +40,6 @@ public class ToggleStorageType : MonoBehaviour
         files.UnloadSelectedFolderFiles();
         files.switchToDesktopRecordings();
         selectFolderButton.gameObject.SetActive(true);
+        selectUserDropdown.gameObject.SetActive(false);
     }
 }

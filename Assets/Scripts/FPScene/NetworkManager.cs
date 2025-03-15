@@ -11,6 +11,7 @@ using UnityEngine.UI;
 using System.Net;
 using UnityEditor.PackageManager.Requests;
 using TMPro;
+using static Unity.Cinemachine.CinemachineSplineRoll;
 
 public class NetworkManager : MonoBehaviour
 {
@@ -26,16 +27,21 @@ public class NetworkManager : MonoBehaviour
 
     }
 
-    public void TryLogin(){
+    /// <summary>
+    /// Attempts to log into the server.
+    /// </summary>
+    public void TryLogin() {
         string inputEmail = GameObject.Find("UsernameInput").GetComponent<TMP_InputField>().text;
         string inputPass = GameObject.Find("PasswordInput").GetComponent<TMP_InputField>().text;
-        var dataToPost = new PostData() { email = inputEmail, pass = inputPass }; // email = "RAWR@gmail.com", pass = "rawr123" 
-        StartCoroutine(PostLoginCoroutine((string error) =>
+        var dataToPost = new UserLoginData() { email = inputEmail, pass = inputPass }; // email = "RAWR@gmail.com", pass = "rawr123" 
+
+        var postRequest = CreateRequest(serverUrl + "/users/login", RequestType.POST, dataToPost);
+        StartCoroutine(GeneralRequestCoroutine((string error) =>
         {
             Debug.Log("Error: " + error);
             GameObject.Find("ErrorText").GetComponent<TMP_Text>().text = "Error: " + error;
             ResetInputText();
-        }, (string text) =>
+        }, (string text) => //if successful, loads user profiles into settings
         {
             //JsonUtility.FromJson<PostResult>(text);
             //Debug.Log(text);
@@ -53,9 +59,12 @@ public class NetworkManager : MonoBehaviour
             GameObject.Find("LogInButton").SetActive(false);
             GameObject.Find("ForkPanel").transform.Find("LogOutButton").gameObject.SetActive(true);
             GameObject.Find("Canvas").GetComponent<MenuController>().PopPage();
-        }, dataToPost));
+        }, postRequest));
     }
 
+    /// <summary>
+    /// Attempts to log into the server. Requires the access token so the server is able to delete it.
+    /// </summary>
     public void TryLogout()
     {
         if (tokenResponse == null)
@@ -63,38 +72,72 @@ public class NetworkManager : MonoBehaviour
             return;
         }
 
-        RefreshData deleteData = new RefreshData();
-        deleteData.refreshToken = tokenResponse.accessToken;
+        TokenData deleteData = new TokenData();
+        deleteData.token = tokenResponse.accessToken;
 
-        StartCoroutine(DeleteLogoutCoroutine((string error) =>
+        var postRequest = CreateRequest(serverUrl + "/users/logout", RequestType.DELETE, deleteData);
+
+        StartCoroutine(GeneralRequestCoroutine((string error) =>
         {
             Debug.Log("Error: " + error);
         }, (string text) =>
         {
-            
+
             JsonUtility.FromJson<PostResult>(text);
             Debug.Log(text);
-            
+
             ResetInputText();
             GameObject.Find("LogOutButton").SetActive(false);
             GameObject.Find("ForkPanel").transform.Find("LogInButton").gameObject.SetActive(true);
-        }, deleteData));
+        }, postRequest));
     }
 
+    //Resets the input fields after logging in.
     private void ResetInputText()
     {
         GameObject.Find("UsernameInput").GetComponent<TMP_InputField>().text = string.Empty;
         GameObject.Find("PasswordInput").GetComponent<TMP_InputField>().text = string.Empty;
     }
 
-    private void LoadUserProfiles()
+    /// <summary>
+    /// Verifies that the access token is valid and not expired.
+    /// </summary>
+    private void VerifyAccessToken()
     {
-        Get(serverUrl + "/patients", (string error) => {
+        if (tokenResponse == null)
+        {
+            return;
+        }
+
+        TokenData expiryCheckData = new TokenData();
+        expiryCheckData.token = tokenResponse.refreshToken;
+
+        var postRequest = CreateRequest(serverUrl + "/users/login/test", RequestType.POST, expiryCheckData);
+
+        StartCoroutine(GeneralRequestCoroutine((string error) =>
+        {
             Debug.Log("Error: " + error);
         }, (string text) =>
         {
 
-            List<Patient> patients = JsonConvert.DeserializeObject<List<Patient>>(text);
+            JsonUtility.FromJson<PostResult>(text);
+            Debug.Log(text);
+
+        }, postRequest));
+    }
+
+    /// <summary>
+    /// Loads all of the user profiles that the logged in user has control over
+    /// TODO: update the URL to correct access; /patients shows all test patients, whereas the user should only see the patients they have control over.
+    /// </summary>
+    private void LoadUserProfiles()
+    {
+        GetPatients(serverUrl + "/patients", (string error) => {
+            Debug.Log("Error: " + error);
+        }, (string text) =>
+        {
+
+            List<Patient> patients = JsonConvert.DeserializeObject<List<Patient>>(text); //TODO: load the files from patient[0] into the recordings cloud tab.
             //Debug.Log("Received: " + text);
 
             foreach (var patient in patients)
@@ -103,65 +146,80 @@ public class NetworkManager : MonoBehaviour
                 GameObject profileButton = Instantiate(userProfileButtonTemplate, profiles, false) as GameObject;
                 TMP_Text[] textComponents = profileButton.GetComponentsInChildren<TMP_Text>();
                 textComponents[0].text = patient.fld_p_name;
+
+                Button buttonComponent = profileButton.GetComponent<Button>();
+
+                if (buttonComponent != null)
+                {
+                    buttonComponent.onClick.AddListener(VerifyAccessToken);
+                    buttonComponent.onClick.AddListener(() => GetPatientRecordings(patient.fld_p_number));
+                }
             }
         });
     }
 
-    private void Get(string url, Action<string> onError, Action<string> onSuccess)
+    /// <summary>
+    /// Gets all patients that the user has control over. might need adjustment when LoadUSerProfiles() is changed.
+    /// </summary>
+    private void GetPatients(string url, Action<string> onError, Action<string> onSuccess)
     {
-        StartCoroutine(GetCoroutine(url, onError, onSuccess));
+        var webRequest = UnityWebRequest.Get(url);
+        StartCoroutine(GeneralRequestCoroutine(onError, onSuccess, webRequest));
     }
 
-    private IEnumerator GetCoroutine(string url, Action<string> onError, Action<string> onSuccess)
-    {
-        using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
-        {
-            yield return webRequest.SendWebRequest();
+    /// <summary>
+    /// Gets a JSON list of all of the selected patients recordings.
+    /// </summary>
+    /// <param name="p_number">Taken from LoadUserProfiles().</param>
+    private void GetPatientRecordings(int p_number){
 
-            if (webRequest.result == UnityWebRequest.Result.ConnectionError || webRequest.result == UnityWebRequest.Result.ProtocolError) {
-                onError(webRequest.error);
-            }
-            else
-            {
-                onSuccess(webRequest.downloadHandler.text);
-            }
-        }
+        var patientId = new { fld_p_number = p_number };
+        var postRequest = CreateRequest(serverUrl + "/patient/recordings/:id", RequestType.GET, patientId);
+        StartCoroutine(GeneralRequestCoroutine((string error) =>
+        {
+            Debug.Log("Error: " + error);
+        }, (string text) =>
+        {
+
+            JsonUtility.FromJson<PostResult>(text);
+            Debug.Log(text);
+
+        }, postRequest));
     }
 
-    private IEnumerator PostLoginCoroutine(Action<string> onError, Action<string> onSuccess, PostData dataToPost)
+
+
+    //ENUMERATOR
+
+    /// <summary>
+    /// A general IEnumerator used to return request results.
+    /// </summary>
+    /// <param name="onError">Used to return and handle errors.</param>
+    /// <param name="onSuccess">Used to return and handle successful calls.</param>
+    /// <param name="request">The unitywebrequest being sent. see CreateRequest() for more details.</param>
+    /// <returns></returns>
+    private IEnumerator GeneralRequestCoroutine(Action<string> onError, Action<string> onSuccess, UnityWebRequest request)
     {
-        
-        var postRequest = CreateRequest(serverUrl + "/users/login", RequestType.POST, dataToPost);
-        yield return postRequest.SendWebRequest();
-        if (postRequest.result == UnityWebRequest.Result.ConnectionError || postRequest.result == UnityWebRequest.Result.ProtocolError)
+        yield return request.SendWebRequest();
+        if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
         {
-            onError(postRequest.error);
+            onError(request.error);
         }
         else
         {
-            //var deserializedPostData = JsonUtility.FromJson<PostResult>(postRequest.downloadHandler.text);
-            onSuccess(postRequest.downloadHandler.text);
-        }
-        
-    }
-
-    private IEnumerator DeleteLogoutCoroutine(Action<string> onError, Action<string> onSuccess, RefreshData dataToPost)
-    {
-        var postRequest = CreateRequest(serverUrl + "/users/logout", RequestType.DELETE, dataToPost);
-        
-        yield return postRequest.SendWebRequest();
-        if (postRequest.result == UnityWebRequest.Result.ConnectionError || postRequest.result == UnityWebRequest.Result.ProtocolError)
-        {
-            onError(postRequest.error);
-        }
-        else
-        {
-            //var deserializedPostData = JsonUtility.FromJson<PostResult>(postRequest.downloadHandler.text);
-            onSuccess(postRequest.downloadHandler.text);
+            onSuccess(request.downloadHandler.text);
         }
     }
 
+    //WEB REQUEST
 
+    /// <summary>
+    /// Used to generate a Unitywebrequest.
+    /// </summary>
+    /// <param name="path">The path the request will use.</param>
+    /// <param name="type">An enum determining the type of request. currently can be GET, POST, PUT, or DELETE.</param>
+    /// <param name="data">an object representing data set to null by default. used to pass body JSON objects.</param>
+    /// <returns>A unity web request used as a parameter for GeneralRequestCoroutine</returns>
     private UnityWebRequest CreateRequest(string path, RequestType type = RequestType.GET, object data = null)
     {
         var request = new UnityWebRequest(path, type.ToString());
@@ -169,6 +227,7 @@ public class NetworkManager : MonoBehaviour
         if (data != null)
         {
             var bodyRaw = Encoding.UTF8.GetBytes(JsonUtility.ToJson(data));
+            Debug.Log(JsonUtility.ToJson(data));
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         }
 
@@ -179,6 +238,7 @@ public class NetworkManager : MonoBehaviour
     }
 }
 
+//request type enum
 public enum RequestType
 {
     GET = 0,
@@ -188,6 +248,8 @@ public enum RequestType
 }
 
 [System.Serializable]
+
+//Patient class.
 public class Patient
 {
     public string fld_p_id_pk;
@@ -199,22 +261,31 @@ public class Patient
 }
 
 [Serializable]
-public class PostData
+//user login data.
+public class UserLoginData
 {
     public string email;
     public string pass;
 }
 
+/// <summary>
+/// used to store token resposes.
+/// </summary>
 public class TokenResponse
 {
     public string accessToken;
     public string refreshToken;
 }
 
-public class RefreshData
+/// <summary>
+/// used to send a single token.
+/// </summary>
+public class TokenData
 {
-    public string refreshToken;
+    public string token;
 }
+
+//unused i think
 public class PostResult
 {
     public string success { get; set; }
