@@ -1,13 +1,17 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Rendering.LookDev;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 public class OpenCloseRecordings : MonoBehaviour
 {
     [SerializeField] private GameObject openButton;
     [SerializeField] private GameObject closeButton;
-    private void OnOpenRecordings()
+    public void OpenRecordings(InputAction.CallbackContext ctx)
     {
+        if (!ctx.performed) return;
+        Debug.Log($"Jump event triggered at {Time.time}");  
         Button button1 = openButton.GetComponent<Button>();
         Button button2 = closeButton.GetComponent<Button>();
         if (openButton.activeSelf && button1.interactable)

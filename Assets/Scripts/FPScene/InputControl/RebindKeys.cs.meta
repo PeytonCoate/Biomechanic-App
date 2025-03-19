@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2efface8e479a3e4884747219dca3e7d
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - openRecordingsPanel: {fileID: -1535582904833309150, guid: 91a6fce6b6fa52f4b9343eb916f32dfe, type: 3}
+  - playerController: {instanceID: 0}
+  - startRebindObject: {instanceID: 0}
+  - waitingForInputObject: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

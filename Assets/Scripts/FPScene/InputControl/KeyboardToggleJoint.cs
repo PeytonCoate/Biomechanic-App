@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class KeyboardToggleJoint : MonoBehaviour
@@ -15,43 +16,49 @@ public class KeyboardToggleJoint : MonoBehaviour
     [SerializeField] private Toggle toggle5;
     [SerializeField] private Toggle toggle6;
     // Start is called before the first frame update
-    private void OnOne()
+    public void One(InputAction.CallbackContext ctx)
     {
+        if (!ctx.performed) return;
         if (cam.Priority > 1)
         {
             toggle1.isOn = !toggle1.isOn;
         }
     }
-    private void OnTwo()
+    public void Two(InputAction.CallbackContext ctx)
     {
+        if (!ctx.performed) return;
         if (cam.Priority > 1)
         {
             toggle2.isOn = !toggle2.isOn;
         }
     }
-    private void OnThree()
+    public void Three(InputAction.CallbackContext ctx)
     {
+        if (!ctx.performed) return;
         if (cam.Priority > 1)
         {
             toggle3.isOn = !toggle3.isOn;
         }
     }
-    private void OnFour()
+    public void Four(InputAction.CallbackContext ctx)
     {
+        if (!ctx.performed) return;
         if (cam.Priority > 1)
         {
             toggle4.isOn = !toggle4.isOn;
         }
     }
-    private void OnFive()
+    public void Five(InputAction.CallbackContext ctx)
     {
+        if (!ctx.performed) return;
         if (cam.Priority > 1)
         {
             toggle5.isOn = !toggle5.isOn;
         }
     }
-    private void OnSix()
+    public void Six(InputAction.CallbackContext ctx)
     {
+        if (!ctx.performed) return;
         if (cam.Priority > 1)
         {
             toggle6.isOn = !toggle6.isOn;

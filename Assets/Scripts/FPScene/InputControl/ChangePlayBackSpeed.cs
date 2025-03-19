@@ -11,8 +11,9 @@ public class ChangePlayBackSpeed : MonoBehaviour
 
   
 
-    private void OnUp()
+    public void SpeedUp(InputAction.CallbackContext ctx)
     {
+        if (!ctx.performed) return;
         if (progressBar.gameObject.activeSelf)
         {
             GameObject buttonControllerObject = GameObject.Find("ButtonController");//buttoncontroller
@@ -22,8 +23,9 @@ public class ChangePlayBackSpeed : MonoBehaviour
         }
     }
 
-    private void OnDown()
+    public void SlowDown(InputAction.CallbackContext ctx)
     {
+        if (!ctx.performed) return;
         if (progressBar.gameObject.activeSelf)
         {
             GameObject buttonControllerObject = GameObject.Find("ButtonController");//buttoncontroller
@@ -32,8 +34,9 @@ public class ChangePlayBackSpeed : MonoBehaviour
             fileLoader.SetPlayBackSpeed(oldspeed - 25f);
         }
     }
-    private void OnLeft()
+    public void SkipBack(InputAction.CallbackContext ctx)
     {
+        if (!ctx.performed) return;
         GameObject buttonControllerObject = GameObject.Find("ButtonController");//buttoncontroller
         FileLoader fileLoader = buttonControllerObject.GetComponent<FileLoader>();
         if (progressBar.gameObject.activeSelf)
@@ -42,8 +45,9 @@ public class ChangePlayBackSpeed : MonoBehaviour
         }
     }
 
-    private void OnRight()
+    public void SkipForward(InputAction.CallbackContext ctx)
     {
+        if (!ctx.performed) return;
         GameObject buttonControllerObject = GameObject.Find("ButtonController");//buttoncontroller
         FileLoader fileLoader = buttonControllerObject.GetComponent<FileLoader>();
         if (progressBar.gameObject.activeSelf)

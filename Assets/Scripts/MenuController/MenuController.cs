@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Canvas))]
 [DisallowMultipleComponent]
@@ -34,8 +35,9 @@ public class MenuController : MonoBehaviour
         }
     }
 
-    private void OnBack()
+    public void Back(InputAction.CallbackContext ctx)
     {
+        if (!ctx.performed) return;
         if (RootCanvas.enabled && RootCanvas.gameObject.activeInHierarchy)
         {
             if (PageStack.Count != 0)
