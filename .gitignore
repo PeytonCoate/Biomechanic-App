@@ -34,3 +34,6 @@ UserSettings/
 # Mac system files
 .DS_Store
 
+#RecordFileManager.cs (NDA)
+Assets/Scripts/FPScene/RecordFileManager.cs
+Assets/Scripts/FPScene/RecordFileManager.cs.meta

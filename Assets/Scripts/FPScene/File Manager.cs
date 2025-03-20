@@ -24,7 +24,7 @@ public class FileManager : MonoBehaviour
     [SerializeField]
     private Canvas PageControl;
 
-    private string mainPath = "E:\\Unity\\Projects\\Biomechanic-App\\Biomechanic-App\\Assets"; //Change this to whatever directory your recording CSV files are in
+    private string mainPath = "C:\\Users\\DVXR1\\Documents\\STRIDE\\Biomechanic-App\\Assets\\Resources"; //Change this to whatever directory your recording CSV files are in
     private int sortType = 0;
 
     public async void AsyncSelectFolder()
