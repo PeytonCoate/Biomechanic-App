@@ -98,7 +98,7 @@ public class MovementController : MonoBehaviour
 
 
     //list data likely no longer needed because the position of the joints will be determined by the position of the progress bar.
-    public void LoadCSVData(string path, int progressBarValue)  /*ref List<Vector3> hipData, ref List<Vector3> kneeData, ref List<Vector3> ankleData, bool flipX*/
+    public void LoadCSVData(string path, int progressBarValue, string[] lines)  /*ref List<Vector3> hipData, ref List<Vector3> kneeData, ref List<Vector3> ankleData, bool flipX*/
     {
         //string path = Path.Combine(Application.streamingAssetsPath, fileName); not neccesary as the file path is now passed in from the FileLoader.
         
@@ -108,17 +108,29 @@ public class MovementController : MonoBehaviour
             return;
         }
 
-        string[] lines = File.ReadAllLines(path);
-        string[] values = lines[progressBarValue].Split(',');
+        string currentLine = lines[progressBarValue];
 
-        
-        if(values.Length < 19)
+        BuildPositionList(currentLine);
+
+    }
+
+    public void LoadReadInData(string readInLine)
+    {
+        BuildPositionList(readInLine);
+    }
+
+    private void BuildPositionList(string currentLine)
+    {
+        string[] values = currentLine.Split(',');
+
+
+        if (values.Length < 19)
         {
             Debug.LogWarning("not enough columns in file row.");
             return;
         }
 
-        string time = values[0].Trim();
+        //string time = values[0].Trim(); //use if time is ever neccesary
 
         float[] positionList = new float[values.Length - 1];
 
@@ -135,37 +147,17 @@ public class MovementController : MonoBehaviour
         }
 
         UpdatePositions(vectorList);
-        /* // not needed
-        foreach (string line in lines)
-        {
-            string[] values = line.Split(',');
-
-            if (values.Length < 4) continue;
-
-            string label = values[0].Trim();
-            float x = float.Parse(values[1]);
-            float y = float.Parse(values[2]);
-            float z = float.Parse(values[3]);
-
-            if (flipX) x *= -1;
-
-            Vector3 position = new Vector3(x, y, z);
-
-            if (label == "Hip") hipData.Add(position);
-            else if (label == "Kne") kneeData.Add(position);
-            else if (label == "Ank") ankleData.Add(position);
-        }
-        */
-
     }
 
     private void UpdatePositions(Vector3[] vectorList)
     {
 
         // Move spheres based on CSV while applying offsets
-        TLL_Hip.transform.position = vectorList[0] + targetRendererList[0].bounds.center;
-        TLL_Knee.transform.position = vectorList[2] + targetRendererList[2].bounds.center;
-        TLL_Ankle.transform.position = vectorList[4] + targetRendererList[4].bounds.center;
+
+        TLL_Hip.transform.position = vectorList[4] + targetRendererList[0].bounds.center; //THESE TWO TARGET RENDERERS ARE TEMPORARILY SWAPPED DUE TO DATA LABELING BEING WRONG
+        TLL_Knee.transform.position = vectorList[2] + targetRendererList[2].bounds.center;//THESE TWO TARGET RENDERERS ARE TEMPORARILY SWAPPED DUE TO DATA LABELING BEING WRONG
+        TLL_Ankle.transform.position = vectorList[0] + targetRendererList[4].bounds.center;
+        
 
 
         TRL_Hip.transform.position = vectorList[1] + targetRendererList[1].bounds.center;
@@ -186,7 +178,7 @@ public class MovementController : MonoBehaviour
         UpdateBoxColor(TLL_AnkleBox, TLL_Ankle.transform.position, targetRendererList[5].bounds.center);
         */
         //yield return new WaitForSeconds(updateRate);
-      
+
     }
 
     private void UpdateBoxColor(GameObject box, Vector3 spherePos, Vector3 boxCenter)

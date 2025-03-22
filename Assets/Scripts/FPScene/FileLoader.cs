@@ -23,6 +23,7 @@ public class FileLoader : MonoBehaviour
     private float skipIntervalValue;
     private float updateIntervalSpeed = 100f;
     private float progress = 0f;
+    private string[] lines;
     private string fullFileName = "";
     private string folderPath = "";
     private int rowCount;
@@ -43,7 +44,7 @@ public class FileLoader : MonoBehaviour
             movementController.loadJoints();
             if (progressBar.value < progressBar.maxValue)
             {
-                movementController.LoadCSVData(fullFileName, (int)progressBar.value);
+                movementController.LoadCSVData(fullFileName, (int)progressBar.value, lines);
             }
             inputField.gameObject.SetActive(true);
             progressBar.gameObject.SetActive(true);
@@ -67,6 +68,7 @@ public class FileLoader : MonoBehaviour
         fullFileName = fileFullname;
         fileButton = filebutton;
         fileName.text = fileToOpen;
+        lines = File.ReadAllLines(fileFullname);
         rowCount = File.ReadAllLines(fileFullname).Length;
 
         progressBar.maxValue = rowCount;
