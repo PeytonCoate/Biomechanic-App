@@ -22298,7 +22298,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1305802016}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2010256521}
+        m_TargetAssemblyTypeName: RecordFileManager, Assembly-CSharp
+        m_MethodName: StartRecording
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1305802016
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -32481,14 +32493,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 2010256499}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e1d5983da0f8eb34d9eb05d443e253cd, type: 3}
+  m_Script: {fileID: 11500000, guid: 88d1f6466c6817a4da5db7327ab2d5d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   errorText: {fileID: 913837727}
   menuController: {fileID: 1497397254}
   selectExercisePanel: {fileID: 836943910}
-  SaveExercisePanel: {fileID: 0}
-  movementController: {fileID: 0}
+  SaveExercisePanel: {fileID: 1303648733}
+  movementController: {fileID: 919132149307283384}
   RecordButton: {fileID: 1213344490}
   StopButton: {fileID: 268059578}
 --- !u!1 &2014383808
@@ -33030,7 +33042,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.765625, y: 0.5}
   m_AnchorMax: {x: 0.765625, y: 0.5}
-  m_AnchoredPosition: {x: 899.8002, y: 0.000010323}
+  m_AnchoredPosition: {x: 899.8001, y: 0.000010323}
   m_SizeDelta: {x: 900, y: 1080}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2044649151
