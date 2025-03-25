@@ -15,6 +15,8 @@ public class FreeLookRightClickControl : MonoBehaviour
     [SerializeField]
     private CinemachineOrbitalFollow orbitalFollow; //For WASD
 
+    [SerializeField] private PlayerInput playerController = null;
+
     [SerializeField]
     private float horizontalSpeed = 200f; // Speed for horizontal rotation
     [SerializeField]
@@ -46,26 +48,30 @@ public class FreeLookRightClickControl : MonoBehaviour
         float targetInputX = 0f;
         float targetInputY = 0f;
 
-        if (Keyboard.current.wKey.isPressed && cam.Priority.Value > 1)
+        if (playerController.currentActionMap.name == "UI")
         {
-            StopRecentering();
-            targetInputY = 1f;
+            if (Keyboard.current.wKey.isPressed && cam.Priority.Value > 1)
+            {
+                StopRecentering();
+                targetInputY = 1f;
+            }
+            if (Keyboard.current.sKey.isPressed && cam.Priority.Value > 1)
+            {
+                StopRecentering();
+                targetInputY = -1f;
+            }
+            if (Keyboard.current.dKey.isPressed && cam.Priority.Value > 1)
+            {
+                StopRecentering();
+                targetInputX = 1f;
+            }
+            if (Keyboard.current.aKey.isPressed && cam.Priority.Value > 1)
+            {
+                StopRecentering();
+                targetInputX = -1f;
+            }
         }
-        if (Keyboard.current.sKey.isPressed && cam.Priority.Value > 1)
-        {
-            StopRecentering();
-            targetInputY = -1f;
-        }
-        if (Keyboard.current.dKey.isPressed && cam.Priority.Value > 1)
-        {
-            StopRecentering();
-            targetInputX = 1f;
-        }
-        if (Keyboard.current.aKey.isPressed && cam.Priority.Value > 1)
-        {
-            StopRecentering();
-            targetInputX = -1f;
-        }
+
 
         float appliedSmoothTime = (targetInputX == 0 && targetInputY == 0) ? decelerationTime : smoothTime;
 

@@ -17,12 +17,12 @@ public class UserSettings : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        sensitivityValue = PlayerPrefs.GetFloat("Sensitivity");
+        sensitivityValue = PlayerPrefs.GetFloat("Sensitivity", 0.5f);
         GameObject sensitivitySliderObject = GameObject.Find("MouseSensitivitySlider");
         Slider sensSlider = sensitivitySliderObject.GetComponent<Slider>();
         sensSlider.value = sensitivityValue;
 
-        playBackSpeed = PlayerPrefs.GetFloat("PlayBackSpeed");
+        playBackSpeed = PlayerPrefs.GetFloat("PlayBackSpeed", 1f);
         GameObject playBackSpeedSliderObject = GameObject.Find("PlayBackSpeedSlider");
         Slider playBackSpeedSlider = playBackSpeedSliderObject.GetComponent<Slider>();
         playBackSpeedSlider.value = playBackSpeed;
@@ -39,6 +39,7 @@ public class UserSettings : MonoBehaviour
         {
             GameObject.Find("DefaultDirectoryName").GetComponent<TMP_Text>().text = defaultPath;
             GameObject.Find("ButtonController").GetComponent<FileManager>().SwitchDirectory(defaultPath);
+            GameObject.Find("ButtonController").GetComponent<RecordFileManager>().SwitchDirectory(defaultPath);
         }
         else
         {
@@ -104,6 +105,7 @@ public class UserSettings : MonoBehaviour
         PlayerPrefs.SetString("DefaultPath", defaultPath);
         GameObject.Find("DefaultDirectoryName").GetComponent<TMP_Text>().text = defaultPath;
         GameObject.Find("ButtonController").GetComponent<FileManager>().SwitchDirectory(defaultPath);
+        GameObject.Find("ButtonController").GetComponent<RecordFileManager>().SwitchDirectory(defaultPath);
     }
 
     private async Task DefaultFolderSelect() //async in order to keep main program running

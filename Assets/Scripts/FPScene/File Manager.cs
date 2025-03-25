@@ -133,6 +133,15 @@ public class FileManager : MonoBehaviour
                 buttonComponent.onClick.AddListener(fileLoader.PauseFile);
                 buttonComponent.onClick.AddListener(interactableButton.InteractButtonOn);
             }
+
+
+            Button uploadButton = fileButton.transform.Find("UploadButton").GetComponent<Button>();
+             
+            if (uploadButton != null)
+            {
+                uploadButton.onClick.AddListener(menuController.PopPage);
+                uploadButton.onClick.AddListener(() => buttonControllerObject.GetComponent<UploadFileController>().OpenUploadFilePanel(file.Name, mainPath));
+            }
         }
     }
 

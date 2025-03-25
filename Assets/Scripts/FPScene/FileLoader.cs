@@ -1,10 +1,11 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+//using UnityEngine.Windows;
 using static UnityEngine.ParticleSystem;
 using static UnityEngine.Rendering.DebugUI;
 
@@ -167,5 +168,34 @@ public class FileLoader : MonoBehaviour
         {
             Debug.LogWarning("File not found: " + filePath);
         }
+    }
+
+    public void ChangeFileName()
+    {
+        string file;
+        FileInfo fileInfo = new FileInfo(fullFileName);
+
+        string dir = fileInfo.DirectoryName;
+
+        if (!inputField.text.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+        {
+           file = $"{inputField.text}.csv";
+        }
+        else
+        {
+            file = inputField.text;
+        }
+
+        inputField.text = file;
+        fileName.text = file;
+        if(fileInfo.Exists)
+        {
+            fullFileName = Path.Combine(dir, file);
+            fileInfo.MoveTo(fullFileName);
+        }
+        GameObject buttonControllerObject = GameObject.Find("ButtonController");
+        FileManager files = buttonControllerObject.GetComponent<FileManager>();
+        files.UnloadSelectedFolderFiles();
+        files.LoadSelectedFolderFiles(folderPath);
     }
 }
