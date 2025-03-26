@@ -7,12 +7,17 @@ using Newtonsoft.Json;
 using System.Text;
 using UnityEngine.UI;
 using TMPro;
+using static System.Net.Mime.MediaTypeNames;
 
 
 public class NetworkManager : MonoBehaviour
 {
     [SerializeField] private GameObject userProfileButtonTemplate;
     [SerializeField] private Transform profiles;
+
+    [SerializeField] private GameObject loginButton;
+    [SerializeField] private GameObject logoutButton;
+
     private readonly string serverUrl = "http://18.223.209.117:8080";
 
     private TokenResponse tokenResponse;
@@ -37,25 +42,45 @@ public class NetworkManager : MonoBehaviour
             Debug.Log("Error: " + error);
             GameObject.Find("ErrorText").GetComponent<TMP_Text>().text = "Error: " + error;
             ResetInputText();
-        }, (string text) => //if successful, loads user profiles into settings
+        }, (string text, Dictionary<string, string> responseHeaders) => //if successful, loads user profiles into settings
         {
-            //JsonUtility.FromJson<PostResult>(text);
-            //Debug.Log(text);
             tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(text);
 
             string accessToken = tokenResponse.accessToken;
-            string refreshToken = tokenResponse.refreshToken;
             Debug.Log(accessToken);
-            Debug.Log(refreshToken);
+
+            if (responseHeaders.TryGetValue("set-cookie", out string cookieHeader))
+            {
+                string refreshToken = ExtractRefreshToken(cookieHeader);
+                Debug.Log("Refresh Token Extracted: " + refreshToken);
+                PlayerPrefs.SetString("refreshToken", refreshToken); // Store it for future use
+            }
+            else
+            {
+                Debug.LogWarning("Refresh token cookie not found");
+            }
+
 
             LoadUserProfiles();
-
             ResetInputText();
             GameObject.Find("ErrorText").GetComponent<TMP_Text>().text = "";
-            GameObject.Find("LogInButton").SetActive(false);
-            GameObject.Find("ForkPanel").transform.Find("LogOutButton").gameObject.SetActive(true);
+            loginButton.SetActive(false);
+            logoutButton.SetActive(true);
             GameObject.Find("Canvas").GetComponent<MenuController>().PopPage();
         }, postRequest));
+    }
+
+    private string ExtractRefreshToken(string cookieHeader)
+    {
+        string[] cookies = cookieHeader.Split(';');
+        foreach (string cookie in cookies)
+        {
+            if (cookie.Trim().StartsWith("refreshToken="))
+            {
+                return cookie.Split('=')[1].Trim();
+            }
+        }
+        return null;
     }
 
     /// <summary>
@@ -76,15 +101,15 @@ public class NetworkManager : MonoBehaviour
         StartCoroutine(GeneralRequestCoroutine((string error) =>
         {
             Debug.Log("Error: " + error);
-        }, (string text) =>
+        }, (string text, Dictionary<string, string> responseHeaders) =>
         {
 
             JsonUtility.FromJson<PostResult>(text);
             Debug.Log(text);
 
             ResetInputText();
-            GameObject.Find("LogOutButton").SetActive(false);
-            GameObject.Find("ForkPanel").transform.Find("LogInButton").gameObject.SetActive(true);
+            logoutButton.SetActive(false);
+            loginButton.gameObject.SetActive(true);
         }, postRequest));
     }
 
@@ -113,7 +138,7 @@ public class NetworkManager : MonoBehaviour
         StartCoroutine(GeneralRequestCoroutine((string error) =>
         {
             Debug.Log("Error: " + error);
-        }, (string text) =>
+        }, (string text, Dictionary<string, string> responseHeaders) =>
         {
 
             JsonUtility.FromJson<PostResult>(text);
@@ -130,7 +155,7 @@ public class NetworkManager : MonoBehaviour
     {
         GetPatients(serverUrl + "/patients", (string error) => {
             Debug.Log("Error: " + error);
-        }, (string text) =>
+        }, (string text, Dictionary<string, string> responseHeaders) =>
         {
 
             List<Patient> patients = JsonConvert.DeserializeObject<List<Patient>>(text); //TODO: load the files from patient[0] into the recordings cloud tab.
@@ -157,7 +182,7 @@ public class NetworkManager : MonoBehaviour
     /// <summary>
     /// Gets all patients that the user has control over. might need adjustment when LoadUSerProfiles() is changed.
     /// </summary>
-    private void GetPatients(string url, Action<string> onError, Action<string> onSuccess)
+    private void GetPatients(string url, Action<string> onError, Action<string, Dictionary<string, string>> onSuccess)
     {
         var webRequest = UnityWebRequest.Get(url);
         StartCoroutine(GeneralRequestCoroutine(onError, onSuccess, webRequest));
@@ -174,7 +199,7 @@ public class NetworkManager : MonoBehaviour
         StartCoroutine(GeneralRequestCoroutine((string error) =>
         {
             Debug.Log("Error: " + error);
-        }, (string text) =>
+        }, (string text, Dictionary<string, string> responseHeaders) =>
         {
 
             JsonUtility.FromJson<PostResult>(text);
@@ -194,7 +219,7 @@ public class NetworkManager : MonoBehaviour
     /// <param name="onSuccess">Used to return and handle successful calls.</param>
     /// <param name="request">The unitywebrequest being sent. see CreateRequest() for more details.</param>
     /// <returns></returns>
-    private IEnumerator GeneralRequestCoroutine(Action<string> onError, Action<string> onSuccess, UnityWebRequest request)
+    private IEnumerator GeneralRequestCoroutine(Action<string> onError, Action<string, Dictionary<string, string>> onSuccess, UnityWebRequest request)
     {
         yield return request.SendWebRequest();
         if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
@@ -203,7 +228,8 @@ public class NetworkManager : MonoBehaviour
         }
         else
         {
-            onSuccess(request.downloadHandler.text);
+            Dictionary<string, string> headers = request.GetResponseHeaders();
+            onSuccess(request.downloadHandler.text, headers);
         }
     }
 
