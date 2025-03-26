@@ -14,11 +14,17 @@ using static UnityEngine.Rendering.DebugUI;
 public class FileLoader : MonoBehaviour
 {
     [SerializeField] private Slider progressBar;
-    [SerializeField] private TMP_InputField inputField;
     [SerializeField] private TMP_Text ProgressAt;
-    [SerializeField] private TMP_Text fileName;
+
+    [SerializeField] private TMP_InputField fileNameInput;
+    [SerializeField] private TMP_Text filePlaceholder;
+    [SerializeField] private TMP_Text renameErrorText;
+
     [SerializeField] private Toggle playToggle;
     [SerializeField] GameObject mainModel;
+
+    [SerializeField] private Toggle cloudToggle;
+    [SerializeField] private Toggle DesktopToggle;
 
     private GameObject fileButton;
     private float skipIntervalValue;
@@ -47,14 +53,14 @@ public class FileLoader : MonoBehaviour
             {
                 movementController.LoadCSVData(fullFileName, (int)progressBar.value, lines);
             }
-            inputField.gameObject.SetActive(true);
+            fileNameInput.gameObject.SetActive(true);
             progressBar.gameObject.SetActive(true);
             ProgressAt.text = progressBar.value.ToString() + "/" + (rowCount);
         }
         else
         {
             movementController.unloadJoints();
-            inputField.gameObject.SetActive(false);
+            fileNameInput.gameObject.SetActive(false);
             progressBar.gameObject.SetActive(false);
             ProgressAt.text = "";
         }
@@ -68,7 +74,10 @@ public class FileLoader : MonoBehaviour
         folderPath = mainPath;
         fullFileName = fileFullname;
         fileButton = filebutton;
-        fileName.text = fileToOpen;
+
+        fileNameInput.text = "";
+        filePlaceholder.text = fileToOpen;
+        
         lines = File.ReadAllLines(fileFullname);
         rowCount = File.ReadAllLines(fileFullname).Length;
 
@@ -158,7 +167,7 @@ public class FileLoader : MonoBehaviour
             }
             GameObject buttonControllerObject = GameObject.Find("ButtonController");
             FileManager files = buttonControllerObject.GetComponent<FileManager>();
-            fileName.text = "";
+            filePlaceholder.text = "";
             files.UnloadSelectedFolderFiles();
             files.LoadSelectedFolderFiles(folderPath);
             rowCount = 0;
@@ -170,32 +179,56 @@ public class FileLoader : MonoBehaviour
         }
     }
 
-    public void ChangeFileName()
+    public void ChangeLocalFileName()
     {
+ 
         string file;
         FileInfo fileInfo = new FileInfo(fullFileName);
 
         string dir = fileInfo.DirectoryName;
 
-        if (!inputField.text.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+        if (string.Compare(fileNameInput.text, "") == 0)
         {
-           file = $"{inputField.text}.csv";
+            return;
+        }
+
+        if (!fileNameInput.text.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+        {
+           file = $"{fileNameInput.text}.csv";
         }
         else
         {
-            file = inputField.text;
+            file = fileNameInput.text;
         }
 
-        inputField.text = file;
-        fileName.text = file;
-        if(fileInfo.Exists)
+        if(!fileInfo.Exists)
         {
-            fullFileName = Path.Combine(dir, file);
-            fileInfo.MoveTo(fullFileName);
+            renameErrorText.text = "ERROR: The original file does not exist.";
+            return;
         }
+
+        fullFileName = Path.Combine(dir, file);
+
+        if (File.Exists(fullFileName))
+        {
+            renameErrorText.text = "ERROR: A file with the new name already exists.";
+            return;
+        }
+
+        fileInfo.MoveTo(fullFileName);
+
+        fileNameInput.text = file;
+
+        DesktopToggle.isOn = true;
         GameObject buttonControllerObject = GameObject.Find("ButtonController");
         FileManager files = buttonControllerObject.GetComponent<FileManager>();
         files.UnloadSelectedFolderFiles();
         files.LoadSelectedFolderFiles(folderPath);
+
+    }
+    
+    public void UnloadRenameError()
+    {
+        renameErrorText.text = "";
     }
 }
