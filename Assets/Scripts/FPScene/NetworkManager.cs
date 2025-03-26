@@ -7,7 +7,8 @@ using Newtonsoft.Json;
 using System.Text;
 using UnityEngine.UI;
 using TMPro;
-using static System.Net.Mime.MediaTypeNames;
+using System.Security.Cryptography;
+//using static System.Net.Mime.MediaTypeNames;
 
 
 public class NetworkManager : MonoBehaviour
@@ -51,9 +52,8 @@ public class NetworkManager : MonoBehaviour
 
             if (responseHeaders.TryGetValue("set-cookie", out string cookieHeader))
             {
-                string refreshToken = ExtractRefreshToken(cookieHeader);
-                Debug.Log("Refresh Token Extracted: " + refreshToken);
-                PlayerPrefs.SetString("refreshToken", refreshToken); // Store it for future use
+                Debug.Log("Cookie Header Found: " + cookieHeader);
+                SaveCookieSecurely(cookieHeader);
             }
             else
             {
@@ -70,18 +70,28 @@ public class NetworkManager : MonoBehaviour
         }, postRequest));
     }
 
-    private string ExtractRefreshToken(string cookieHeader)
+    void SaveCookieSecurely(string cookie)
     {
-        string[] cookies = cookieHeader.Split(';');
-        foreach (string cookie in cookies)
-        {
-            if (cookie.Trim().StartsWith("refreshToken="))
-            {
-                return cookie.Split('=')[1].Trim();
-            }
-        }
-        return null;
+        /*
+        byte[] encryptedData = ProtectedData.Protect(
+            Encoding.UTF8.GetBytes(cookie),
+            null,
+            DataProtectionScope.CurrentUser
+        );
+        System.IO.File.WriteAllBytes("cookie.dat", encryptedData);
+        */
     }
+    /*
+    string LoadCookieSecurely()
+    {
+        
+        if (!System.IO.File.Exists("cookie.dat")) return null;
+
+        byte[] encryptedData = System.IO.File.ReadAllBytes("cookie.dat");
+        byte[] decryptedData = ProtectedData.Unprotect(encryptedData, null, DataProtectionScope.CurrentUser);
+        return Encoding.UTF8.GetString(decryptedData);
+        
+    }*/
 
     /// <summary>
     /// Attempts to log into the server. Requires the access token so the server is able to delete it.
@@ -245,7 +255,7 @@ public class NetworkManager : MonoBehaviour
     private UnityWebRequest CreateRequest(string path, RequestType type = RequestType.GET, object data = null)
     {
         var request = new UnityWebRequest(path, type.ToString());
-
+        
         if (data != null)
         {
             var bodyRaw = Encoding.UTF8.GetBytes(JsonUtility.ToJson(data));
