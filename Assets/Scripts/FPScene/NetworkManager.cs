@@ -8,6 +8,7 @@ using System.Text;
 using UnityEngine.UI;
 using TMPro;
 using System.Security.Cryptography;
+using System.IO;
 //using static System.Net.Mime.MediaTypeNames;
 
 
@@ -53,7 +54,8 @@ public class NetworkManager : MonoBehaviour
             if (responseHeaders.TryGetValue("set-cookie", out string cookieHeader))
             {
                 Debug.Log("Cookie Header Found: " + cookieHeader);
-                SaveCookieSecurely(cookieHeader);
+                tokenResponse.refreshToken = cookieHeader;
+                //SaveCookieSecurely(cookieHeader); //TODO: securely save cookie
             }
             else
             {
@@ -62,6 +64,8 @@ public class NetworkManager : MonoBehaviour
 
 
             LoadUserProfiles();
+            LoadUserExercises();
+
             ResetInputText();
             GameObject.Find("ErrorText").GetComponent<TMP_Text>().text = "";
             loginButton.SetActive(false);
@@ -69,29 +73,6 @@ public class NetworkManager : MonoBehaviour
             GameObject.Find("Canvas").GetComponent<MenuController>().PopPage();
         }, postRequest));
     }
-
-    void SaveCookieSecurely(string cookie)
-    {
-        /*
-        byte[] encryptedData = ProtectedData.Protect(
-            Encoding.UTF8.GetBytes(cookie),
-            null,
-            DataProtectionScope.CurrentUser
-        );
-        System.IO.File.WriteAllBytes("cookie.dat", encryptedData);
-        */
-    }
-    /*
-    string LoadCookieSecurely()
-    {
-        
-        if (!System.IO.File.Exists("cookie.dat")) return null;
-
-        byte[] encryptedData = System.IO.File.ReadAllBytes("cookie.dat");
-        byte[] decryptedData = ProtectedData.Unprotect(encryptedData, null, DataProtectionScope.CurrentUser);
-        return Encoding.UTF8.GetString(decryptedData);
-        
-    }*/
 
     /// <summary>
     /// Attempts to log into the server. Requires the access token so the server is able to delete it.
@@ -123,27 +104,20 @@ public class NetworkManager : MonoBehaviour
         }, postRequest));
     }
 
-    //Resets the input fields after logging in.
-    private void ResetInputText()
-    {
-        GameObject.Find("UsernameInput").GetComponent<TMP_InputField>().text = string.Empty;
-        GameObject.Find("PasswordInput").GetComponent<TMP_InputField>().text = string.Empty;
-    }
-
     /// <summary>
     /// Verifies that the access token is valid and not expired.
     /// </summary>
-    private void VerifyAccessToken()
+    private void CheckRefreshToken()
     {
         if (tokenResponse == null)
         {
             return;
         }
 
-        TokenData expiryCheckData = new TokenData();
-        expiryCheckData.token = tokenResponse.refreshToken;
+        TokenData RefreshToken = new TokenData();
+        RefreshToken.token = ExtractRefreshToken(tokenResponse.refreshToken);
 
-        var postRequest = CreateRequest(serverUrl + "/users/login/test", RequestType.POST, expiryCheckData);
+        var postRequest = CreateRequest(serverUrl + "/users/check", RequestType.GET, RefreshToken);
 
         StartCoroutine(GeneralRequestCoroutine((string error) =>
         {
@@ -151,11 +125,69 @@ public class NetworkManager : MonoBehaviour
         }, (string text, Dictionary<string, string> responseHeaders) =>
         {
 
-            JsonUtility.FromJson<PostResult>(text);
             Debug.Log(text);
 
         }, postRequest));
     }
+
+
+    private bool AuthenticateAccessToken()
+    {
+        if (tokenResponse == null) { return false; }
+
+        bool authenticated = false;
+
+        TokenData tokenToAuthenticate = new TokenData();
+        tokenToAuthenticate.token = tokenResponse.accessToken;
+
+        var postRequest = CreateRequest(serverUrl + "/users/login/test", RequestType.POST, tokenToAuthenticate);
+
+        postRequest.SetRequestHeader("authorization", $"Bearer {tokenResponse.accessToken}");
+
+        StartCoroutine(GeneralRequestCoroutine((string error) =>
+        {
+            Debug.Log(error);
+            if (postRequest.responseCode == 403)
+            {
+                RegenerateAcessToken();
+            }
+        }, (string text, Dictionary<string, string> responseHeaders) =>
+        {
+            Debug.Log(text);
+            authenticated = true;
+        }, postRequest));
+
+        return authenticated;
+    }
+
+    /// <summary>
+    /// Regenerates an access token if it has expired.
+    /// </summary>
+    private void RegenerateAcessToken()
+    {
+        if(tokenResponse == null) { return; }
+
+        TokenData tokenToRegenerate = new TokenData();
+        tokenToRegenerate.token = tokenResponse.accessToken;
+
+        var postRequest = CreateRequest(serverUrl + "/users/token", RequestType.POST, tokenToRegenerate);
+
+        postRequest.SetRequestHeader("Cookie", tokenResponse.refreshToken);
+
+        StartCoroutine(GeneralRequestCoroutine((string error) =>
+        {
+            Debug.Log("Error: " + error);
+        }, (string text, Dictionary<string, string> responseHeaders) =>
+        {
+
+            tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(text);
+            string accessToken = tokenResponse.accessToken;
+            Debug.Log(accessToken);
+        }, postRequest));
+    }
+
+
+
 
     /// <summary>
     /// Loads all of the user profiles that the logged in user has control over
@@ -182,12 +214,18 @@ public class NetworkManager : MonoBehaviour
 
                 if (buttonComponent != null)
                 {
-                    buttonComponent.onClick.AddListener(VerifyAccessToken);
-                    buttonComponent.onClick.AddListener(() => GetPatientRecordings(patient.fld_p_number));
+                    buttonComponent.onClick.AddListener(() => AuthenticateAccessToken());
+                    //buttonComponent.onClick.AddListener(() => GetPatientRecordings(patient.fld_p_number));
                 }
             }
         });
     }
+
+    private void LoadUserExercises()
+    {
+        
+    }
+
 
     /// <summary>
     /// Gets all patients that the user has control over. might need adjustment when LoadUSerProfiles() is changed.
@@ -244,7 +282,6 @@ public class NetworkManager : MonoBehaviour
     }
 
     //WEB REQUEST
-
     /// <summary>
     /// Used to generate a Unitywebrequest.
     /// </summary>
@@ -259,7 +296,6 @@ public class NetworkManager : MonoBehaviour
         if (data != null)
         {
             var bodyRaw = Encoding.UTF8.GetBytes(JsonUtility.ToJson(data));
-            Debug.Log(JsonUtility.ToJson(data));
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         }
 
@@ -267,6 +303,29 @@ public class NetworkManager : MonoBehaviour
         request.SetRequestHeader("Content-Type", "application/json");
 
         return request;
+    }
+
+
+    //NON WEB
+
+    private string ExtractRefreshToken(string cookieHeader)
+    {
+        string[] cookies = cookieHeader.Split(';');
+        foreach (string cookie in cookies)
+        {
+            if (cookie.Trim().StartsWith("refreshToken="))
+            {
+                return cookie.Split('=')[1].Trim();
+            }
+        }
+        return null;
+    }
+
+    //Resets the input fields after logging in.
+    private void ResetInputText()
+    {
+        GameObject.Find("UsernameInput").GetComponent<TMP_InputField>().text = string.Empty;
+        GameObject.Find("PasswordInput").GetComponent<TMP_InputField>().text = string.Empty;
     }
 }
 
@@ -315,6 +374,11 @@ public class TokenResponse
 public class TokenData
 {
     public string token;
+}
+
+public class CookieData
+{
+    public string cookie;
 }
 
 //unused i think
