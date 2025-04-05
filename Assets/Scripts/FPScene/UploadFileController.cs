@@ -6,12 +6,19 @@ using System.IO;
 
 public class UploadFileController : MonoBehaviour
 {
+    [SerializeField] private NetworkManager networkManager;
+
     [SerializeField] private MenuController menuController;
     [SerializeField] private Page UploadFilePanel;
 
     [SerializeField] private TMP_InputField fileNameInput;
     [SerializeField] private TMP_Text fileDirectory;
     [SerializeField] private TMP_Dropdown profileDropdown;
+
+    private string fileTitle;
+    private string fileFullName;
+    private string fileDate;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -25,11 +32,24 @@ public class UploadFileController : MonoBehaviour
         fileNameInput.text = fileName;
         fileDirectory.text = $"Directory: {directory}";
 
+        fileTitle = fileName;
+
         DirectoryInfo dir = new DirectoryInfo(directory);
-        FileInfo fileInfo = new FileInfo(Path.Combine(dir.FullName, fileName));
 
-        string FileDate = File.GetCreationTime(fileInfo.ToString()).ToString();
+        fileFullName = Path.Combine(dir.FullName, fileName);
 
-        Debug.Log(FileDate);
+        FileInfo fileInfo = new FileInfo(fileFullName);
+
+        fileDate = File.GetCreationTime(fileInfo.ToString()).ToString();
+
+        Debug.Log(fileDate);
+    }
+
+    public void Upload()
+    {
+        byte[] fileData = File.ReadAllBytes(fileFullName);
+
+        networkManager.TryUpload(fileData, fileTitle);
+
     }
 }

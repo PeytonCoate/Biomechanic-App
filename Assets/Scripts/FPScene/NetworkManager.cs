@@ -9,6 +9,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Security.Cryptography;
 using System.IO;
+using UnityEditor.PackageManager.Requests;
 //using static System.Net.Mime.MediaTypeNames;
 
 
@@ -20,20 +21,37 @@ public class NetworkManager : MonoBehaviour
     [SerializeField] private GameObject loginButton;
     [SerializeField] private GameObject logoutButton;
 
-    private readonly string serverUrl = "http://18.223.209.117:8080";
+    private readonly string serverUrl = "http://18.188.25.75:8080";
 
     private TokenResponse tokenResponse;
 
     // Start is called before the first frame update
     void Start()
     {
+        //TryRegister();
+    }
 
+    private void TryRegister()
+    {
+        string inputEmail = "RAWR@gmail.com";
+        string inputPass = "rawr123";
+        var dataToPost = new UserRegisterData() { email = inputEmail, pass = inputPass, provider = false, name = "RAWR123" }; // email = "RAWR@gmail.com", pass = "rawr123" 
+
+        var postRequest = CreateRequest(serverUrl + "/users/register", RequestType.POST, dataToPost);
+        StartCoroutine(GeneralRequestCoroutine((string error) =>
+        {
+            Debug.Log("Error: " + error);
+        }, (string text, Dictionary<string, string> responseHeaders) => 
+        {
+            Debug.Log(text);
+        }, postRequest));
     }
 
     /// <summary>
     /// Attempts to log into the server.
     /// </summary>
     public void TryLogin() {
+        
         string inputEmail = GameObject.Find("UsernameInput").GetComponent<TMP_InputField>().text;
         string inputPass = GameObject.Find("PasswordInput").GetComponent<TMP_InputField>().text;
         var dataToPost = new UserLoginData() { email = inputEmail, pass = inputPass }; // email = "RAWR@gmail.com", pass = "rawr123" 
@@ -186,7 +204,44 @@ public class NetworkManager : MonoBehaviour
         }, postRequest));
     }
 
+    public void TryDownload()
+    {
 
+    }
+
+    public void TryUpload(byte[] fileData, string fileName)
+    {
+        if (tokenResponse == null)
+        {
+            Debug.Log("user not logged in!");
+            return;
+        }
+        AuthenticateAccessToken();
+
+        UserExerciseData exerciseData = new UserExerciseData();
+        exerciseData.exercisename = fileName;
+
+        WWWForm form = new WWWForm();
+        form.AddBinaryData("exercise", fileData, fileName, "text/csv");
+        form.AddField("userData", JsonUtility.ToJson(exerciseData));
+
+
+        var postRequest = UnityWebRequest.Post(serverUrl + "/uploadcsv", form);
+
+
+        postRequest.SetRequestHeader("authorization", $"Bearer {tokenResponse.accessToken}");
+        //postRequest.SetRequestHeader("Content-Type", "multipart/form-data");
+
+        StartCoroutine(GeneralRequestCoroutine((string error) =>
+        {
+            Debug.Log(error);
+        }, (string text, Dictionary<string, string> responseHeaders) =>
+        {
+            Debug.Log(text);
+        }, postRequest));
+
+
+    }
 
 
     /// <summary>
@@ -351,6 +406,15 @@ public class Patient
     public string fld_t_id_fk;
 }
 
+public class UserRegisterData
+{
+    public string email;
+    public string pass;
+    public bool provider;
+    public string name;
+}
+
+
 [Serializable]
 //user login data.
 public class UserLoginData
@@ -358,6 +422,12 @@ public class UserLoginData
     public string email;
     public string pass;
 }
+
+public class UserExerciseData
+{
+    public string exercisename;
+}
+
 
 /// <summary>
 /// used to store token resposes.
