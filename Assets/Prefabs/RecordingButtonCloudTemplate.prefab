@@ -287,8 +287,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7215190665765606274}
-  - {fileID: 5284799700715843139}
   - {fileID: 2962750979785759428}
+  - {fileID: 5284799700715843139}
   - {fileID: 6410871148760501363}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -403,7 +403,7 @@ GameObject:
   - component: {fileID: 5813292124431200071}
   - component: {fileID: 7377891679596217309}
   m_Layer: 5
-  m_Name: DirectoryText
+  m_Name: UserIdText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

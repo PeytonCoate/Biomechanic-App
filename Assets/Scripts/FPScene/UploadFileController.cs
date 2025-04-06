@@ -48,7 +48,9 @@ public class UploadFileController : MonoBehaviour
     public void Upload()
     {
         byte[] fileData = File.ReadAllBytes(fileFullName);
-
+        
+        int index = fileTitle.IndexOf('_');
+        fileTitle = fileTitle.Substring(0, index);
         networkManager.TryUpload(fileData, fileTitle);
 
     }

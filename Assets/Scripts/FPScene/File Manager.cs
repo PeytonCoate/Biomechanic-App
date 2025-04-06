@@ -24,6 +24,9 @@ public class FileManager : MonoBehaviour
     [SerializeField]
     private Canvas PageControl;
 
+    [SerializeField] private Toggle desktopToggle;
+    [SerializeField] private Toggle cloudToggle;
+
     private string mainPath = "C:\\Users\\DVXR1\\Documents\\STRIDE\\Biomechanic-App\\Assets\\Resources"; //Change this to whatever directory your recording CSV files are in
     private int sortType = 0;
 
@@ -159,7 +162,19 @@ public class FileManager : MonoBehaviour
     {
         sortType = sort;
         UnloadSelectedFolderFiles();
-        LoadSelectedFolderFiles(mainPath);
+
+        if (desktopToggle.isOn)
+        {
+            LoadSelectedFolderFiles(mainPath);
+        }
+
+        if (cloudToggle.isOn)
+        {
+            NetworkManager networkManager = GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
+            networkManager.changeSortType(sortType);
+            networkManager.LoadUserExercises();
+        }
+
     }
 
 }

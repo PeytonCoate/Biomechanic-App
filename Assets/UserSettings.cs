@@ -39,7 +39,7 @@ public class UserSettings : MonoBehaviour
         {
             GameObject.Find("DefaultDirectoryName").GetComponent<TMP_Text>().text = defaultPath;
             GameObject.Find("ButtonController").GetComponent<FileManager>().SwitchDirectory(defaultPath);
-            GameObject.Find("ButtonController").GetComponent<RecordFileManager>().SwitchDirectory(defaultPath);
+            //GameObject.Find("ButtonController").GetComponent<RecordFileManager>().SwitchDirectory(defaultPath);
         }
         else
         {
@@ -105,7 +105,7 @@ public class UserSettings : MonoBehaviour
         PlayerPrefs.SetString("DefaultPath", defaultPath);
         GameObject.Find("DefaultDirectoryName").GetComponent<TMP_Text>().text = defaultPath;
         GameObject.Find("ButtonController").GetComponent<FileManager>().SwitchDirectory(defaultPath);
-        GameObject.Find("ButtonController").GetComponent<RecordFileManager>().SwitchDirectory(defaultPath);
+        //GameObject.Find("ButtonController").GetComponent<RecordFileManager>().SwitchDirectory(defaultPath);
     }
 
     private async Task DefaultFolderSelect() //async in order to keep main program running

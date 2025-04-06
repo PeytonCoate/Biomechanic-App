@@ -32,6 +32,9 @@ public class ToggleStorageType : MonoBehaviour
         selectUserDropdown.gameObject.SetActive(true);
         FileManager files = GameObject.Find("ButtonController").GetComponent<FileManager>();
         files.UnloadSelectedFolderFiles();
+
+        NetworkManager networkManager = GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
+        networkManager.LoadUserExercises();
     }
 
     private void DesktopRecordings()

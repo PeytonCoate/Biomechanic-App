@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using System.Text;
 using UnityEngine.UI;
 using TMPro;
+using System.Linq;
 using System.Security.Cryptography;
 using System.IO;
 using UnityEditor.PackageManager.Requests;
@@ -18,8 +19,19 @@ public class NetworkManager : MonoBehaviour
     [SerializeField] private GameObject userProfileButtonTemplate;
     [SerializeField] private Transform profiles;
 
+    [SerializeField] private GameObject RecordingButtonCloudTemplate;
+    [SerializeField] private Transform RecordingItems;
+
     [SerializeField] private GameObject loginButton;
     [SerializeField] private GameObject logoutButton;
+
+    [SerializeField] private Toggle CloudRecordingsToggle;
+    [SerializeField] private Toggle DesktopRecordingsToggle;
+
+    [SerializeField] private FileManager fileManager;
+
+
+    private int sortType = 0;
 
     private readonly string serverUrl = "http://18.188.25.75:8080";
 
@@ -67,11 +79,9 @@ public class NetworkManager : MonoBehaviour
             tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(text);
 
             string accessToken = tokenResponse.accessToken;
-            Debug.Log(accessToken);
 
             if (responseHeaders.TryGetValue("set-cookie", out string cookieHeader))
             {
-                Debug.Log("Cookie Header Found: " + cookieHeader);
                 tokenResponse.refreshToken = cookieHeader;
                 //SaveCookieSecurely(cookieHeader); //TODO: securely save cookie
             }
@@ -81,8 +91,10 @@ public class NetworkManager : MonoBehaviour
             }
 
 
-            LoadUserProfiles();
-            LoadUserExercises();
+            //LoadUserProfiles();
+            DesktopRecordingsToggle.isOn = true;
+            CloudRecordingsToggle.isOn = true;
+
 
             ResetInputText();
             GameObject.Find("ErrorText").GetComponent<TMP_Text>().text = "";
@@ -115,6 +127,9 @@ public class NetworkManager : MonoBehaviour
 
             JsonUtility.FromJson<PostResult>(text);
             Debug.Log(text);
+
+            tokenResponse =  null;
+            fileManager.UnloadSelectedFolderFiles();
 
             ResetInputText();
             logoutButton.SetActive(false);
@@ -171,7 +186,6 @@ public class NetworkManager : MonoBehaviour
             }
         }, (string text, Dictionary<string, string> responseHeaders) =>
         {
-            Debug.Log(text);
             authenticated = true;
         }, postRequest));
 
@@ -200,8 +214,63 @@ public class NetworkManager : MonoBehaviour
 
             tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(text);
             string accessToken = tokenResponse.accessToken;
-            Debug.Log(accessToken);
         }, postRequest));
+    }
+
+    public void LoadUserExercises()
+    {
+        if (tokenResponse == null)
+        {
+            Debug.Log("user not logged in!");
+            return;
+        }
+        AuthenticateAccessToken();
+
+        var GetRequest = CreateRequest(serverUrl + "/exercises/list", RequestType.GET);
+
+        GetRequest.SetRequestHeader("authorization", $"Bearer {tokenResponse.accessToken}");
+
+        StartCoroutine(GeneralRequestCoroutine((string error) =>
+        {
+            Debug.Log(error);
+        }, (string text, Dictionary<string, string> responseHeaders) =>
+        {
+            string json = text;
+            List<ExerciseItem> exercises = JsonConvert.DeserializeObject<List<ExerciseItem>>(json);
+
+            //for changed sort type in sorting dropdown;
+            if (sortType == 1)
+            {
+                exercises = exercises.OrderBy(f => f.date).ToList();
+            }
+            else if (sortType == 2)
+            {
+                exercises = exercises.OrderBy(f => f.key).ToList();
+            }
+            else
+            {
+                exercises = exercises.OrderBy(f => f.key).ToList();
+            }
+
+            foreach (var exercise in exercises)
+            {
+                GameObject recordingButton = Instantiate(RecordingButtonCloudTemplate, RecordingItems, false) as GameObject;
+                TMP_Text[] textComponents = recordingButton.GetComponentsInChildren<TMP_Text>();
+                textComponents[0].text = exercise.key;
+                textComponents[1].text = exercise.date;
+
+                Button buttonComponent = recordingButton.GetComponent<Button>();
+
+                if (buttonComponent != null)
+                {
+                    buttonComponent.onClick.AddListener(() => AuthenticateAccessToken());
+                    //buttonComponent.onClick.AddListener(() => GetPatientRecordings(patient.fld_p_number));
+                }
+            }
+            GameObject buttonControllerObject = GameObject.Find("ButtonController");//buttoncontroller 
+            SetScroll setScroll = buttonControllerObject.GetComponent<SetScroll>();
+            setScroll.SetScrollArea();
+        }, GetRequest));
     }
 
     public void TryDownload()
@@ -276,10 +345,7 @@ public class NetworkManager : MonoBehaviour
         });
     }
 
-    private void LoadUserExercises()
-    {
-        
-    }
+
 
 
     /// <summary>
@@ -382,6 +448,11 @@ public class NetworkManager : MonoBehaviour
         GameObject.Find("UsernameInput").GetComponent<TMP_InputField>().text = string.Empty;
         GameObject.Find("PasswordInput").GetComponent<TMP_InputField>().text = string.Empty;
     }
+
+    public void changeSortType(int newSortType)
+    {
+        sortType = newSortType;
+    }
 }
 
 //request type enum
@@ -455,4 +526,9 @@ public class CookieData
 public class PostResult
 {
     public string success { get; set; }
+}
+public class ExerciseItem
+{
+    public string key;
+    public string date;
 }
