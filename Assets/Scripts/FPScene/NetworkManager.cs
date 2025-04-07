@@ -108,8 +108,6 @@ public class NetworkManager : MonoBehaviour
             GameObject.Find("Canvas").GetComponent<MenuController>().PopPage();
         }, postRequest));
 
-        string loginCallId = Guid.NewGuid().ToString();
-        Debug.Log($"[TryLogin] Called - ID: {loginCallId}");
     }
 
     /// <summary>
@@ -267,7 +265,6 @@ public class NetworkManager : MonoBehaviour
                 textComponents[0].text = exercise.key;
                 textComponents[1].text = exercise.date;
                 textComponents[2].text = exercise.exercise;
-                Debug.Log(textComponents[2]);
 
                 Button buttonComponent = recordingButton.GetComponent<Button>();
 
