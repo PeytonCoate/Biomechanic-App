@@ -16,16 +16,16 @@ public class OnStartup : MonoBehaviour
         QualitySettings.vSyncCount = 0;  // VSync must be disabled
         Application.targetFrameRate = 200;
 
-        //string defaultPath = PlayerPrefs.GetString("DefaultPath", GetOutputDirectory());
+        //PlayerPrefs.SetString("DefaultPath", GetOutputDirectory());
 
     }
 
     string GetOutputDirectory()
     {
-        string registryKey = @"Software\MyUnityGame";
+        string registryKey = @"Software\STRIDE";
         using (RegistryKey key = Registry.CurrentUser.OpenSubKey(registryKey))
         {
-            return key?.GetValue("OutputDirectory", "C:\\DefaultGameOutput") as string;
+            return key?.GetValue("OutputDirectory", "C:\\Program Files") as string;
         }
     }
 

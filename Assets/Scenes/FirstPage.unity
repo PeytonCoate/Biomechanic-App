@@ -8341,8 +8341,8 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 2010256516}
         m_TargetAssemblyTypeName: ToggleStorageType, Assembly-CSharp
-        m_MethodName: ToggleStorage
-        m_Mode: 1
+        m_MethodName: OnDesktopToggleChanged
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -11001,7 +11001,7 @@ MonoBehaviour:
   RecenteringTarget: 3
   HorizontalAxis:
     Value: 0
-    Center: -0
+    Center: 0
     Range: {x: -180, y: 180}
     Wrap: 1
     Recentering:
@@ -34131,7 +34131,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
@@ -35177,8 +35177,8 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 2010256516}
         m_TargetAssemblyTypeName: ToggleStorageType, Assembly-CSharp
-        m_MethodName: ToggleStorage
-        m_Mode: 1
+        m_MethodName: OnCloudToggleChanged
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine

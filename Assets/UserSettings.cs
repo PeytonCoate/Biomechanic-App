@@ -39,6 +39,7 @@ public class UserSettings : MonoBehaviour
         {
             GameObject.Find("DefaultDirectoryName").GetComponent<TMP_Text>().text = defaultPath;
             GameObject.Find("ButtonController").GetComponent<FileManager>().SwitchDirectory(defaultPath);
+            GameObject.Find("NetworkManager").GetComponent<NetworkManager>().changeDefaultPath(defaultPath);
             //GameObject.Find("ButtonController").GetComponent<RecordFileManager>().SwitchDirectory(defaultPath);
         }
         else
@@ -105,6 +106,7 @@ public class UserSettings : MonoBehaviour
         PlayerPrefs.SetString("DefaultPath", defaultPath);
         GameObject.Find("DefaultDirectoryName").GetComponent<TMP_Text>().text = defaultPath;
         GameObject.Find("ButtonController").GetComponent<FileManager>().SwitchDirectory(defaultPath);
+        GameObject.Find("NetworkManager").GetComponent<NetworkManager>().changeDefaultPath(defaultPath);
         //GameObject.Find("ButtonController").GetComponent<RecordFileManager>().SwitchDirectory(defaultPath);
     }
 

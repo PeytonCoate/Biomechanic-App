@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,17 +14,30 @@ public class ToggleStorageType : MonoBehaviour
     [SerializeField] private Button selectFolderButton;
     [SerializeField] private TMP_Dropdown selectUserDropdown;
 
-
+    /* obsolete: caused undefined behavior
     public void ToggleStorage()
     {
+        // Only respond to toggles being turned ON
         if (cloudToggle.isOn)
         {
+            Debug.Log("Cloud Toggle turned on\n" + Environment.StackTrace);
             CloudRecordings();
         }
         else if (DesktopToggle.isOn)
         {
+            Debug.Log("Desktop Toggle turned on\n" + Environment.StackTrace);
             DesktopRecordings();
         }
+    }
+    */
+
+    public void OnCloudToggleChanged(bool value)
+    {
+        if (value) CloudRecordings();
+    }
+    public void OnDesktopToggleChanged(bool value)
+    {
+        if (value) DesktopRecordings();
     }
 
     private void CloudRecordings()
@@ -32,7 +46,6 @@ public class ToggleStorageType : MonoBehaviour
         selectUserDropdown.gameObject.SetActive(true);
         FileManager files = GameObject.Find("ButtonController").GetComponent<FileManager>();
         files.UnloadSelectedFolderFiles();
-
         NetworkManager networkManager = GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
         networkManager.LoadUserExercises();
     }

@@ -10,7 +10,6 @@ using TMPro;
 using System.Linq;
 using System.Security.Cryptography;
 using System.IO;
-using UnityEditor.PackageManager.Requests;
 //using static System.Net.Mime.MediaTypeNames;
 
 
@@ -30,17 +29,18 @@ public class NetworkManager : MonoBehaviour
 
     [SerializeField] private FileManager fileManager;
 
-
     private int sortType = 0;
 
     private readonly string serverUrl = "http://18.188.25.75:8080";
 
+    private string mainPath;
+
     private TokenResponse tokenResponse;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
-        //TryRegister();
+
     }
 
     private void TryRegister()
@@ -63,7 +63,6 @@ public class NetworkManager : MonoBehaviour
     /// Attempts to log into the server.
     /// </summary>
     public void TryLogin() {
-        
         string inputEmail = GameObject.Find("UsernameInput").GetComponent<TMP_InputField>().text;
         string inputPass = GameObject.Find("PasswordInput").GetComponent<TMP_InputField>().text;
         var dataToPost = new UserLoginData() { email = inputEmail, pass = inputPass }; // email = "RAWR@gmail.com", pass = "rawr123" 
@@ -91,9 +90,15 @@ public class NetworkManager : MonoBehaviour
             }
 
 
-            //LoadUserProfiles();
-            DesktopRecordingsToggle.isOn = true;
-            CloudRecordingsToggle.isOn = true;
+
+            if (CloudRecordingsToggle.isOn)
+            {
+                LoadUserExercises();
+            }
+            else if(DesktopRecordingsToggle.isOn)
+            {
+                CloudRecordingsToggle.isOn = true;
+            }
 
 
             ResetInputText();
@@ -102,6 +107,9 @@ public class NetworkManager : MonoBehaviour
             logoutButton.SetActive(true);
             GameObject.Find("Canvas").GetComponent<MenuController>().PopPage();
         }, postRequest));
+
+        string loginCallId = Guid.NewGuid().ToString();
+        Debug.Log($"[TryLogin] Called - ID: {loginCallId}");
     }
 
     /// <summary>
@@ -258,6 +266,8 @@ public class NetworkManager : MonoBehaviour
                 TMP_Text[] textComponents = recordingButton.GetComponentsInChildren<TMP_Text>();
                 textComponents[0].text = exercise.key;
                 textComponents[1].text = exercise.date;
+                textComponents[2].text = exercise.exercise;
+                Debug.Log(textComponents[2]);
 
                 Button buttonComponent = recordingButton.GetComponent<Button>();
 
@@ -266,6 +276,14 @@ public class NetworkManager : MonoBehaviour
                     buttonComponent.onClick.AddListener(() => AuthenticateAccessToken());
                     //buttonComponent.onClick.AddListener(() => GetPatientRecordings(patient.fld_p_number));
                 }
+
+                Button uploadButton = recordingButton.transform.Find("UploadButton").GetComponent<Button>();
+
+                if (uploadButton != null)
+                {
+                    uploadButton.onClick.AddListener(() => TryDownload(exercise.exercise, exercise.key));
+                }
+
             }
             GameObject buttonControllerObject = GameObject.Find("ButtonController");//buttoncontroller 
             SetScroll setScroll = buttonControllerObject.GetComponent<SetScroll>();
@@ -273,8 +291,32 @@ public class NetworkManager : MonoBehaviour
         }, GetRequest));
     }
 
-    public void TryDownload()
+    public void TryDownload(string key, string name)
     {
+        if (tokenResponse == null)
+        {
+            Debug.Log("user not logged in!");
+            return;
+        }
+        AuthenticateAccessToken();
+
+        var GetRequest = CreateRequest(serverUrl + $"/exercise/{key}", RequestType.GET);
+
+        GetRequest.SetRequestHeader("authorization", $"Bearer {tokenResponse.accessToken}");
+
+        StartCoroutine(GeneralRequestCoroutine((string error) =>
+        {
+            Debug.Log(error);
+        }, (string text, Dictionary<string, string> responseHeaders) =>
+        {
+            // Save to file
+
+            Debug.Log(mainPath);
+            string filePath = Path.Combine(mainPath, $"{name}.csv");
+            File.WriteAllBytes(filePath, GetRequest.downloadHandler.data);
+
+            Debug.Log("File downloaded to: " + filePath);
+        }, GetRequest));
 
     }
 
@@ -453,6 +495,11 @@ public class NetworkManager : MonoBehaviour
     {
         sortType = newSortType;
     }
+
+    public void changeDefaultPath(string path)
+    {
+        mainPath = path;
+    }
 }
 
 //request type enum
@@ -531,4 +578,5 @@ public class ExerciseItem
 {
     public string key;
     public string date;
+    public string exercise;
 }
