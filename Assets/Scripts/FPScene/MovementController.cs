@@ -74,7 +74,7 @@ public class MovementController : MonoBehaviour
         //StartCoroutine(UpdatePositions());
     }
 
-    public void loadJoints()
+    public void loadJoints()//TODO: figure out why joint sphere's aren't displaying
     {
         TLL_Hip.GetComponent<MeshRenderer>().enabled = true;
         TLL_Knee.GetComponent<MeshRenderer>().enabled = true;
@@ -145,7 +145,7 @@ public class MovementController : MonoBehaviour
             vectorList[j] = new Vector3(positionList[i], positionList[i + 1], positionList[i + 2]);
             j++;
         }
-
+        Debug.Log(vectorList);
         UpdatePositions(vectorList);
     }
 
@@ -161,10 +161,10 @@ public class MovementController : MonoBehaviour
 
 
         TRL_Hip.transform.position = vectorList[1] + targetRendererList[1].bounds.center;
-        TRL_Knee.transform.position = vectorList[3] + targetRendererList[3].bounds.center; ;
+        TRL_Knee.transform.position = vectorList[3] + targetRendererList[3].bounds.center;
         TRL_Ankle.transform.position = vectorList[5] + targetRendererList[5].bounds.center;
 
-
+        Debug.Log($"{TLL_Hip.transform.position},{TLL_Knee.transform.position},{TLL_Ankle.transform.position},{TRL_Hip.transform.position},{TRL_Knee.transform.position},{TRL_Ankle.transform.position}");
 
         // Check and update box colors based on deviation
 
